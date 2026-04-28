@@ -1,0 +1,10 @@
+﻿<Window x:Class="StandNatura.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="StandNatura"
+        Height="600"
+        Width="900"
+        WindowStartupLocation="CenterScreen"
+        Background="#1B4332">
+    <ContentControl Content="{Binding}"/>
+</Window>
