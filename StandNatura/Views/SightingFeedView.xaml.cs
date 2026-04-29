@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace StandNatura.Views
 {
     /// <summary>
-    /// Interaction logic for MainView.xaml
+    /// Interaction logic for SightingFeedView.xaml
     /// </summary>
-    public partial class MainView : UserControl
+    public partial class SightingFeedView : UserControl
     {
-        public MainView()
+        public SightingFeedView()
         {
             InitializeComponent();
         }
