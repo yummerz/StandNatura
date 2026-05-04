@@ -1,12 +1,189 @@
 ﻿<UserControl x:Class="StandNatura.Views.DonationsFundsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:StandNatura.Views"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-            
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d">
+    <Grid Background="#1B4332">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="20,20,20,10">
+            <TextBlock Text="💰 Donations &amp; Funds"
+                       FontSize="28" FontWeight="Bold"
+                       Foreground="#74C69D"
+                       FontFamily="Trebuchet MS"/>
+            <TextBlock Text="Monitor and manage donation records per sanctuary."
+                       FontSize="13"
+                       Foreground="#95D5B2"
+                       FontFamily="Trebuchet MS"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="20,10,20,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Donations List -->
+            <Grid Grid.Column="0" Margin="0,0,10,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           Text="All Donations"
+                           FontSize="15" FontWeight="Bold"
+                           Foreground="#D8F3DC"
+                           FontFamily="Trebuchet MS"
+                           Margin="0,0,0,8"/>
+
+                <ListBox Grid.Row="1"
+                         ItemsSource="{Binding Donations}"
+                         SelectedItem="{Binding SelectedDonation}"
+                         Background="#2D6A4F"
+                         Foreground="#D8F3DC"
+                         BorderBrush="#52B788"
+                         BorderThickness="2">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="8,6,8,6">
+                                <TextBlock Text="{Binding DonorUsername}"
+                                           FontSize="14" FontWeight="Bold"
+                                           Foreground="#D8F3DC"
+                                           FontFamily="Trebuchet MS"/>
+                                <TextBlock Text="{Binding Amount, StringFormat='₱{0:N2}'}"
+                                           FontSize="12"
+                                           Foreground="#74C69D"
+                                           FontFamily="Trebuchet MS"/>
+                                <TextBlock Text="{Binding SightingTitle}"
+                                           FontSize="11"
+                                           Foreground="#95D5B2"
+                                           FontFamily="Trebuchet MS"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <!-- Right: Donation Details -->
+            <Grid Grid.Column="1" Margin="10,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           Text="Donation Details"
+                           FontSize="15" FontWeight="Bold"
+                           Foreground="#D8F3DC"
+                           FontFamily="Trebuchet MS"
+                           Margin="0,0,0,8"/>
+
+                <Border Grid.Row="1"
+                        Background="#2D6A4F"
+                        BorderBrush="#52B788"
+                        BorderThickness="2"
+                        Padding="15">
+                    <StackPanel>
+
+                        <!-- No selection message -->
+                        <TextBlock Text="Select a donation from the list to view details."
+                                   Foreground="#95D5B2"
+                                   FontFamily="Trebuchet MS"
+                                   FontSize="13"
+                                   Visibility="{Binding SelectedDonation,
+                                       Converter={StaticResource NullToVisibilityConverter}}"/>
+
+                        <!-- Details panel -->
+                        <StackPanel Visibility="{Binding SelectedDonation,
+                                        Converter={StaticResource NotNullToVisibilityConverter}}">
+
+                            <TextBlock Text="Donor"
+                                       FontSize="12" FontWeight="Bold"
+                                       Foreground="#95D5B2"
+                                       FontFamily="Trebuchet MS"
+                                       Margin="0,0,0,2"/>
+                            <TextBlock Text="{Binding SelectedDonation.DonorUsername}"
+                                       FontSize="18" FontWeight="Bold"
+                                       Foreground="#74C69D"
+                                       FontFamily="Trebuchet MS"/>
+
+                            <TextBlock Text="Amount Donated"
+                                       FontSize="12" FontWeight="Bold"
+                                       Foreground="#95D5B2"
+                                       FontFamily="Trebuchet MS"
+                                       Margin="0,15,0,2"/>
+                            <TextBlock Text="{Binding SelectedDonation.Amount, StringFormat='₱{0:N2}'}"
+                                       FontSize="22" FontWeight="Bold"
+                                       Foreground="#52B788"
+                                       FontFamily="Trebuchet MS"/>
+
+                            <TextBlock Text="Donated To"
+                                       FontSize="12" FontWeight="Bold"
+                                       Foreground="#95D5B2"
+                                       FontFamily="Trebuchet MS"
+                                       Margin="0,15,0,2"/>
+                            <TextBlock Text="{Binding SelectedDonation.SightingTitle}"
+                                       FontSize="14"
+                                       Foreground="#D8F3DC"
+                                       FontFamily="Trebuchet MS"
+                                       TextWrapping="Wrap"/>
+
+                            <!-- Divider -->
+                            <Separator Background="#52B788" Margin="0,20,0,20"/>
+
+                            <TextBlock Text="Total Funds Raised for This Sanctuary"
+                                       FontSize="12" FontWeight="Bold"
+                                       Foreground="#95D5B2"
+                                       FontFamily="Trebuchet MS"
+                                       Margin="0,0,0,5"/>
+                            <TextBlock Text="{Binding TotalFunds, StringFormat='₱{0:N2}'}"
+                                       FontSize="28" FontWeight="Bold"
+                                       Foreground="#74C69D"
+                                       FontFamily="Trebuchet MS"/>
+
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- Bottom Buttons -->
+        <Grid Grid.Row="2" Margin="20,10,20,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                    Content="← Back"
+                    Height="45"
+                    Margin="0,0,10,0"
+                    Background="#2D6A4F"
+                    Foreground="#D8F3DC"
+                    FontFamily="Trebuchet MS"
+                    FontSize="14" FontWeight="Bold"
+                    BorderBrush="#52B788" BorderThickness="2"
+                    Command="{Binding GoBackCommand}"/>
+
+            <Button Grid.Column="1"
+                    Content="🗑️ Delete Selected Donation"
+                    Height="45"
+                    Background="#B7374A"
+                    Foreground="#FFFFFF"
+                    FontFamily="Trebuchet MS"
+                    FontSize="14" FontWeight="Bold"
+                    BorderBrush="#E05C6E" BorderThickness="2"
+                    Command="{Binding DeleteDonationCommand}"/>
+        </Grid>
     </Grid>
 </UserControl>

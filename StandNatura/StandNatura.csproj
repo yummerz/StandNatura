@@ -12,10 +12,4 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="ViewModels\ManageUsersViewModel.cs">
-      <Generator>MSBuild:Compile</Generator>
-    </Compile>
-  </ItemGroup>
-
 </Project>

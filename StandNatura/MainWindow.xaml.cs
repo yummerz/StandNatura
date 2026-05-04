@@ -6,6 +6,8 @@ namespace StandNatura
 {
     public partial class MainWindow : Window
     {
+        private User? _currentUser;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -19,7 +21,13 @@ namespace StandNatura
 
         private void OnLoginSuccess(User user)
         {
-            DataContext = new MainViewModel(user.Username);
+            _currentUser = user;
+            DataContext = new AdminHomeViewModel(Navigate, _currentUser);
+        }
+
+        private void Navigate(BaseViewModel viewModel)
+        {
+            DataContext = viewModel;
         }
     }
 }
