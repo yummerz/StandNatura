@@ -10,8 +10,9 @@
         <!-- Converters -->
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
+        <converters:FilePathToImageConverter x:Key="FilePathToImageConverter"/>
 
-        <!-- Views -->
+        <!-- Admin Views -->
         <DataTemplate DataType="{x:Type vm:LoginViewModel}">
             <views:LoginView/>
         </DataTemplate>
@@ -30,5 +31,29 @@
         <DataTemplate DataType="{x:Type vm:DonationsFundsViewModel}">
             <views:DonationsFundsView/>
         </DataTemplate>
+
+        <!-- Contributor Views -->
+        <DataTemplate DataType="{x:Type vm:ContributorHomeViewModel}">
+            <views:ContributorHomeView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SubmitSightingViewModel}">
+            <views:SubmitSightingView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MySightingsViewModel}">
+            <views:MySightingsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HotspotMapViewModel}">
+            <views:HotspotMapView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:RegisterViewModel}">
+            <views:RegisterView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CommunityFeedViewModel}">
+            <views:CommunityFeedView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SightingDetailViewModel}">
+            <views:SightingDetailView/>
+        </DataTemplate>
+
     </Application.Resources>
 </Application>

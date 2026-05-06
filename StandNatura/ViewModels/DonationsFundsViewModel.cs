@@ -21,6 +21,7 @@ namespace StandNatura.ViewModels
     {
         private readonly Action<BaseViewModel> _navigate;
         private readonly User _currentUser;
+        private readonly Action _onLogout;
         private static readonly string connectionString = DatabaseConfig.ConnectionString;
 
         // ── BINDABLE PROPERTIES ──────────────────────────────
@@ -55,12 +56,13 @@ namespace StandNatura.ViewModels
         public ICommand DeleteDonationCommand { get; }
 
         // ── CONSTRUCTOR ───────────────────────────────────────
-        public DonationsFundsViewModel(Action<BaseViewModel> navigate, User currentUser)
+        public DonationsFundsViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout)
         {
             _navigate = navigate;
             _currentUser = currentUser;
+            _onLogout = onLogout;
 
-            GoBackCommand = new RelayCommand(() => _navigate(new AdminHomeViewModel(_navigate, _currentUser)));
+            GoBackCommand = new RelayCommand(() => _navigate(new AdminHomeViewModel(_navigate, _currentUser, _onLogout)));
             DeleteDonationCommand = new RelayCommand(DeleteDonation, CanDeleteDonation);
 
             LoadDonations();

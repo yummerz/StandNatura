@@ -12,6 +12,7 @@ namespace StandNatura.ViewModels
     {
         private readonly Action<BaseViewModel> _navigate;
         private readonly User _currentUser;
+        private readonly Action _onLogout;
         private static readonly string connectionString = DatabaseConfig.ConnectionString;
 
         // ── BINDABLE PROPERTIES ──────────────────────────────
@@ -35,12 +36,13 @@ namespace StandNatura.ViewModels
         public ICommand DenyCommand { get; }
 
         // ── CONSTRUCTOR ───────────────────────────────────────
-        public VerifyPostsViewModel(Action<BaseViewModel> navigate, User currentUser)
+        public VerifyPostsViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout)
         {
             _navigate = navigate;
             _currentUser = currentUser;
+            _onLogout = onLogout;
 
-            GoBackCommand = new RelayCommand(() => _navigate(new AdminHomeViewModel(_navigate, _currentUser)));
+            GoBackCommand = new RelayCommand(() => _navigate(new AdminHomeViewModel(_navigate, _currentUser, _onLogout)));
             ApproveCommand = new RelayCommand(ApprovePost, CanActOnPost);
             DenyCommand = new RelayCommand(DenyPost, CanActOnPost);
 

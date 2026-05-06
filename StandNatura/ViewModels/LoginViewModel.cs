@@ -10,6 +10,7 @@ namespace StandNatura.ViewModels
     public class LoginViewModel : BaseViewModel
     {
         private readonly Action<User> _onLoginSuccess;
+        private readonly Action<BaseViewModel>? _navigate;
         private static readonly string connectionString = DatabaseConfig.ConnectionString;
 
         // ── BINDABLE PROPERTIES ──────────────────────────────
@@ -29,12 +30,15 @@ namespace StandNatura.ViewModels
 
         // ── COMMANDS ──────────────────────────────────────────
         public ICommand LoginCommand { get; }
+        public ICommand GoToRegisterCommand { get; }
 
         // ── CONSTRUCTOR ───────────────────────────────────────
-        public LoginViewModel(Action<User> onLoginSuccess)
+        public LoginViewModel(Action<User> onLoginSuccess, Action<BaseViewModel>? navigate = null)
         {
             _onLoginSuccess = onLoginSuccess;
+            _navigate = navigate;
             LoginCommand = new RelayCommand(ExecuteLogin, CanLogin);
+            GoToRegisterCommand = new RelayCommand(GoToRegister);
         }
 
         // ── COMMAND LOGIC ─────────────────────────────────────
@@ -65,7 +69,8 @@ namespace StandNatura.ViewModels
                                 {
                                     Id = (int)reader["Id"],
                                     Username = reader["Username"].ToString()!,
-                                    Password = reader["Password"].ToString()!
+                                    Password = reader["Password"].ToString()!,
+                                    Role = reader["Role"].ToString()!
                                 };
                             }
                         }
@@ -79,14 +84,15 @@ namespace StandNatura.ViewModels
             }
 
             if (loggedInUser != null)
-            {
                 _onLoginSuccess(loggedInUser);
-            }
             else
-            {
                 MessageBox.Show("Invalid Username or Password.", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+        }
+
+        private void GoToRegister()
+        {
+            _navigate?.Invoke(new RegisterViewModel(_navigate, _onLoginSuccess));
         }
     }
 }

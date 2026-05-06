@@ -16,13 +16,17 @@ namespace StandNatura
 
         private void ShowLogin()
         {
-            DataContext = new LoginViewModel(OnLoginSuccess);
+            DataContext = new LoginViewModel(OnLoginSuccess, Navigate);
         }
 
         private void OnLoginSuccess(User user)
         {
             _currentUser = user;
-            DataContext = new AdminHomeViewModel(Navigate, _currentUser);
+
+            if (user.Role == "Admin")
+                DataContext = new AdminHomeViewModel(Navigate, _currentUser, ShowLogin);
+            else
+                DataContext = new ContributorHomeViewModel(Navigate, _currentUser, ShowLogin);
         }
 
         private void Navigate(BaseViewModel viewModel)

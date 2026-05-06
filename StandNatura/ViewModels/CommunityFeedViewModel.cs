@@ -8,7 +8,7 @@ using Microsoft.Data.SqlClient;
 
 namespace StandNatura.ViewModels
 {
-    public class SightingFeedViewModel : BaseViewModel
+    public class CommunityFeedViewModel : BaseViewModel
     {
         private readonly Action<BaseViewModel> _navigate;
         private readonly User _currentUser;
@@ -16,11 +16,11 @@ namespace StandNatura.ViewModels
         private static readonly string connectionString = DatabaseConfig.ConnectionString;
 
         // ── BINDABLE PROPERTIES ──────────────────────────────
-        private ObservableCollection<SightingDisplay> _approvedSightings = new();
-        public ObservableCollection<SightingDisplay> ApprovedSightings
+        private ObservableCollection<SightingDisplay> _sightings = new();
+        public ObservableCollection<SightingDisplay> Sightings
         {
-            get => _approvedSightings;
-            set => SetProperty(ref _approvedSightings, value);
+            get => _sightings;
+            set => SetProperty(ref _sightings, value);
         }
 
         private SightingDisplay? _selectedSighting;
@@ -31,23 +31,24 @@ namespace StandNatura.ViewModels
         }
 
         // ── COMMANDS ──────────────────────────────────────────
-        public ICommand GoBackCommand { get; }
+        public ICommand ViewSightingCommand { get; }
 
         // ── CONSTRUCTOR ───────────────────────────────────────
-        public SightingFeedViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout)
+        public CommunityFeedViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout)
         {
             _navigate = navigate;
             _currentUser = currentUser;
             _onLogout = onLogout;
-            GoBackCommand = new RelayCommand(() => _navigate(new AdminHomeViewModel(_navigate, _currentUser, _onLogout)));
 
-            LoadApprovedSightings();
+            ViewSightingCommand = new RelayCommand(ViewSighting, CanViewSighting);
+
+            LoadSightings();
         }
 
         // ── LOAD DATA ─────────────────────────────────────────
-        private void LoadApprovedSightings()
+        private void LoadSightings()
         {
-            ApprovedSightings.Clear();
+            Sightings.Clear();
 
             try
             {
@@ -56,7 +57,7 @@ namespace StandNatura.ViewModels
                     string query = @"
                         SELECT s.SightingId, u.Username, s.Title, s.Description,
                                s.DatePosted, s.Location, s.Province, s.Region,
-                               s.Longitude, s.Latitude
+                               s.Longitude, s.Latitude, s.Status, s.Photo
                         FROM Sighting s
                         INNER JOIN Users u ON s.UserId = u.Id
                         WHERE s.Status = 'Approved'
@@ -69,7 +70,7 @@ namespace StandNatura.ViewModels
                         {
                             while (reader.Read())
                             {
-                                ApprovedSightings.Add(new SightingDisplay
+                                Sightings.Add(new SightingDisplay
                                 {
                                     SightingId = (int)reader["SightingId"],
                                     Username = reader["Username"].ToString()!,
@@ -80,7 +81,9 @@ namespace StandNatura.ViewModels
                                     Province = reader["Province"].ToString()!,
                                     Region = reader["Region"].ToString()!,
                                     Longitude = (decimal)reader["Longitude"],
-                                    Latitude = (decimal)reader["Latitude"]
+                                    Latitude = (decimal)reader["Latitude"],
+                                    Status = reader["Status"].ToString()!,
+                                    Photo = reader["Photo"] == DBNull.Value ? string.Empty : reader["Photo"].ToString()!
                                 });
                             }
                         }
@@ -92,5 +95,13 @@ namespace StandNatura.ViewModels
                 MessageBox.Show("Failed to load sightings: " + ex.Message);
             }
         }
+
+        // ── VIEW SIGHTING ─────────────────────────────────────
+        private void ViewSighting()
+        {
+            _navigate(new SightingDetailViewModel(_navigate, _currentUser, _onLogout, SelectedSighting!));
+        }
+
+        private bool CanViewSighting() => SelectedSighting != null;
     }
 }

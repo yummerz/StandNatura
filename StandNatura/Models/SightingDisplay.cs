@@ -1,8 +1,5 @@
 ﻿namespace StandNatura.Models
 {
-    // This model is used for the Sighting Feed
-    // It includes the Username from the Users table
-    // instead of just the UserId
     public class SightingDisplay
     {
         public int SightingId { get; set; }
@@ -15,5 +12,7 @@
         public string Region { get; set; } = string.Empty;
         public decimal Longitude { get; set; }
         public decimal Latitude { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string Photo { get; set; } = string.Empty;
     }
 }
