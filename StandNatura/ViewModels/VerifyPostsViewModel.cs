@@ -73,6 +73,7 @@ namespace StandNatura.ViewModels
                                     Title = reader["Title"].ToString()!,
                                     Description = reader["Description"].ToString()!,
                                     DatePosted = (DateTime)reader["DatePosted"],
+                                    Photo = reader["Photo"] == DBNull.Value ? string.Empty : reader["Photo"].ToString()!,
                                     Location = reader["Location"].ToString()!,
                                     Province = reader["Province"].ToString()!,
                                     Region = reader["Region"].ToString()!,
@@ -113,21 +114,36 @@ namespace StandNatura.ViewModels
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
-            if (result == MessageBoxResult.Yes)
-                UpdateStatus(SelectedSighting.SightingId, "Denied");
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            // Prompt for optional reason
+            var reasonDialog = new Views.DenialReasonDialog();
+            bool? dialogResult = reasonDialog.ShowDialog();
+
+            // If user closed the dialog without confirming, abort the denial
+            if (dialogResult != true)
+                return;
+
+            UpdateStatus(SelectedSighting.SightingId, "Denied", reasonDialog.Reason);
         }
 
         // ── UPDATE STATUS ─────────────────────────────────────
-        private void UpdateStatus(int sightingId, string status)
+        private void UpdateStatus(int sightingId, string status, string? denialReason = null)
         {
             try
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    string query = "UPDATE Sighting SET Status = @status WHERE SightingId = @id";
+                    string query = @"UPDATE Sighting 
+                             SET Status = @status, 
+                                 DenialReason = @denialReason 
+                             WHERE SightingId = @id";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@status", status);
+                        command.Parameters.AddWithValue("@denialReason",
+                            string.IsNullOrWhiteSpace(denialReason) ? DBNull.Value : (object)denialReason);
                         command.Parameters.AddWithValue("@id", sightingId);
                         connection.Open();
                         command.ExecuteNonQuery();

@@ -46,7 +46,7 @@
                                 CornerRadius="4">
                             <StackPanel>
                                 <!-- Photo Preview -->
-                                <Border Height="150"
+                                <Border Height="200"
                                         Background="#2D6A4F"
                                         Margin="0,0,0,10">
                                     <Grid>
@@ -57,10 +57,10 @@
                                                    VerticalAlignment="Center"
                                                    Visibility="{Binding Photo,
                                                        Converter={StaticResource NullToVisibilityConverter}}"/>
-                                        <Image Source="{Binding SelectedSighting.Photo, 
+                                        <Image Source="{Binding Photo, 
                                             Converter={StaticResource FilePathToImageConverter}}"
-                                            Stretch="UniformToFill"
-                                            Visibility="{Binding SelectedSighting.Photo,
+                                            Stretch="Uniform"
+                                            Visibility="{Binding Photo,
                                             Converter={StaticResource NotNullToVisibilityConverter}}"/>
                                     </Grid>
                                 </Border>

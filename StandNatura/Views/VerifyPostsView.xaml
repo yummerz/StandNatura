@@ -174,7 +174,7 @@
                                         Foreground="#95D5B2"
                                         FontFamily="Trebuchet MS"
                                         Margin="0,12,0,2"/>
-                            <Border Height="150"
+                            <Border Height="250"
                                         Background="#1B4332"
                                         BorderBrush="#52B788"
                                         BorderThickness="2"
@@ -188,11 +188,12 @@
                                         VerticalAlignment="Center"
                                         Visibility="{Binding SelectedSighting.Photo,
                                         Converter={StaticResource NullToVisibilityConverter}}"/>
-                                    <Image Source="{Binding SelectedSighting.Photo}"
-                                        Stretch="UniformToFill"
-                                        Visibility="{Binding SelectedSighting.Photo,
-                                        Converter={StaticResource NotNullToVisibilityConverter}}"/>
-                              </Grid>
+                                    <Image Source="{Binding SelectedSighting.Photo,
+                                    Converter={StaticResource FilePathToImageConverter}}"
+                                    Stretch="Uniform"
+                                    Visibility="{Binding SelectedSighting.Photo,
+                                    Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                                </Grid>
                             </Border>
 
                             <TextBlock Text="Date Posted"

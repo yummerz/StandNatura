@@ -54,13 +54,13 @@ namespace StandNatura.ViewModels
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     string query = @"
-                        SELECT s.SightingId, u.Username, s.Title, s.Description,
-                               s.DatePosted, s.Location, s.Province, s.Region,
-                               s.Longitude, s.Latitude
-                        FROM Sighting s
-                        INNER JOIN Users u ON s.UserId = u.Id
-                        WHERE s.Status = 'Approved'
-                        ORDER BY s.DatePosted DESC";
+                SELECT s.SightingId, u.Username, s.Title, s.Description,
+                       s.DatePosted, s.Location, s.Province, s.Region,
+                       s.Longitude, s.Latitude, s.Photo
+                FROM Sighting s
+                INNER JOIN Users u ON s.UserId = u.Id
+                WHERE s.Status = 'Approved'
+                ORDER BY s.DatePosted DESC";
 
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
@@ -80,7 +80,8 @@ namespace StandNatura.ViewModels
                                     Province = reader["Province"].ToString()!,
                                     Region = reader["Region"].ToString()!,
                                     Longitude = (decimal)reader["Longitude"],
-                                    Latitude = (decimal)reader["Latitude"]
+                                    Latitude = (decimal)reader["Latitude"],
+                                    Photo = reader["Photo"] == DBNull.Value ? string.Empty : reader["Photo"].ToString()!
                                 });
                             }
                         }

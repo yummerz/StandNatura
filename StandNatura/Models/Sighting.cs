@@ -16,5 +16,6 @@ namespace StandNatura.Models
         public decimal Longitude { get; set; }
         public decimal Latitude { get; set; }
         public string Status { get; set; } = string.Empty;
+        public string DenialReason { get; set; } = string.Empty;
     }
 }

@@ -33,6 +33,8 @@ namespace StandNatura.ViewModels
         // ── COMMANDS ──────────────────────────────────────────
         public ICommand GoBackCommand { get; }
         public ICommand DeleteSightingCommand { get; }
+        public ICommand EditAndResubmitCommand { get; }
+        public ICommand QuickResubmitCommand { get; }
 
         // ── CONSTRUCTOR ───────────────────────────────────────
         public MySightingsViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout)
@@ -40,12 +42,65 @@ namespace StandNatura.ViewModels
             _navigate = navigate;
             _currentUser = currentUser;
             _onLogout = onLogout;
+            EditAndResubmitCommand = new RelayCommand(EditAndResubmit, CanResubmit);
+            QuickResubmitCommand = new RelayCommand(QuickResubmit, CanResubmit);
 
             GoBackCommand = new RelayCommand(() => _navigate(new ContributorHomeViewModel(_navigate, _currentUser, _onLogout)));
             DeleteSightingCommand = new RelayCommand(DeleteSighting, CanDelete);
 
             LoadMySightings();
         }
+
+        // ── EDIT AND RESUBMIT ─────────────────────────────────
+        private void EditAndResubmit()
+        {
+            _navigate(new SubmitSightingViewModel(_navigate, _currentUser, _onLogout, SelectedSighting!));
+        }
+
+        // ── QUICK RESUBMIT (no edits) ─────────────────────────
+        private void QuickResubmit()
+        {
+            var result = MessageBox.Show(
+                $"Resubmit \"{SelectedSighting!.Title}\" without changes?\n\nIt will return to Pending status for admin review.",
+                "Confirm Resubmit",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    string query = @"UPDATE Sighting 
+                             SET Status = 'Pending', 
+                                 DenialReason = NULL,
+                                 DatePosted = GETDATE()
+                             WHERE SightingId = @id";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@id", SelectedSighting.SightingId);
+                        connection.Open();
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                MessageBox.Show("Sighting resubmitted! It is now pending admin review.", "Success",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+
+                SelectedSighting = null;
+                LoadMySightings();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to resubmit sighting: " + ex.Message);
+            }
+        }
+
+        // ── CAN RESUBMIT ──────────────────────────────────────
+        private bool CanResubmit() =>
+            SelectedSighting != null && SelectedSighting.Status == "Denied";
 
         // ── LOAD DATA ─────────────────────────────────────────
         private void LoadMySightings()
@@ -58,12 +113,12 @@ namespace StandNatura.ViewModels
                 {
                     string query = @"
                         SELECT s.SightingId, u.Username, s.Title, s.Description,
-                               s.DatePosted, s.Location, s.Province, s.Region,
-                               s.Longitude, s.Latitude, s.Status, s.Photo
-                        FROM Sighting s
-                        INNER JOIN Users u ON s.UserId = u.Id
-                        WHERE s.UserId = @userId
-                        ORDER BY s.DatePosted DESC";
+                        s.DatePosted, s.Location, s.Province, s.Region,
+                        s.Longitude, s.Latitude, s.Status, s.Photo, s.DenialReason
+                    FROM Sighting s
+                    INNER JOIN Users u ON s.UserId = u.Id
+                    WHERE s.UserId = @userId
+                    ORDER BY s.DatePosted DESC";
 
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
@@ -86,7 +141,8 @@ namespace StandNatura.ViewModels
                                     Longitude = (decimal)reader["Longitude"],
                                     Latitude = (decimal)reader["Latitude"],
                                     Status = reader["Status"].ToString()!,
-                                    Photo = reader["Photo"] == DBNull.Value ? string.Empty : reader["Photo"].ToString()!
+                                    Photo = reader["Photo"] == DBNull.Value ? string.Empty : reader["Photo"].ToString()!,
+                                    DenialReason = reader["DenialReason"] == DBNull.Value ? string.Empty : reader["DenialReason"].ToString()!
                                 });
                             }
                         }

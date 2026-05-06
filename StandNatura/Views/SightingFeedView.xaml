@@ -121,6 +121,33 @@
                                        FontSize="13"
                                        Foreground="#D8F3DC"
                                        FontFamily="Trebuchet MS"/>
+                            <!-- Photo Preview -->
+                            <TextBlock Text="Photo"
+                                FontSize="12" FontWeight="Bold"
+                                Foreground="#95D5B2"
+                                FontFamily="Trebuchet MS"
+                                Margin="0,12,0,2"/>
+                            <Border Height="200"
+                                Background="#1B4332"
+                                BorderBrush="#52B788"
+                                BorderThickness="2"
+                                Margin="0,0,0,5">
+                                <Grid>
+                                    <TextBlock Text="🌿 No Photo Available"
+                   Foreground="#95D5B2"
+                   FontFamily="Trebuchet MS"
+                   FontSize="12"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Visibility="{Binding SelectedSighting.Photo,
+                       Converter={StaticResource NullToVisibilityConverter}}"/>
+                                    <Image Source="{Binding SelectedSighting.Photo,
+                Converter={StaticResource FilePathToImageConverter}}"
+               Stretch="Uniform"
+               Visibility="{Binding SelectedSighting.Photo,
+                   Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                                </Grid>
+                            </Border>
 
                             <TextBlock Text="Description"
                                        FontSize="12" FontWeight="Bold"

@@ -13,11 +13,11 @@
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Margin="20,20,20,10">
-            <TextBlock Text="📍 Submit a Sighting"
+            <TextBlock Text="{Binding HeaderText}"
                        FontSize="28" FontWeight="Bold"
                        Foreground="#74C69D"
                        FontFamily="Trebuchet MS"/>
-            <TextBlock Text="Log a new sanctuary sighting for admin review."
+            <TextBlock Text="{Binding SubHeaderText}"
                        FontSize="13"
                        Foreground="#95D5B2"
                        FontFamily="Trebuchet MS"
@@ -203,7 +203,7 @@
                                        Converter={StaticResource NullToVisibilityConverter}}"/>
 
                         <!-- Image Preview -->
-                        <Image Stretch="UniformToFill"
+                        <Image Stretch="Uniform"
                             Source="{Binding PhotoPath}"
                             Visibility="{Binding PhotoPath,
                             Converter={StaticResource NotNullToVisibilityConverter}}"/>
@@ -243,7 +243,7 @@
                     Command="{Binding GoBackCommand}"/>
 
             <Button Grid.Column="1"
-                    Content="📍 Submit Sighting"
+                    Content="{Binding SubmitButtonText}"
                     Height="45"
                     Background="#52B788"
                     Foreground="#1B4332"

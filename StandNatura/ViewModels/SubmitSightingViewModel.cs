@@ -14,6 +14,7 @@ namespace StandNatura.ViewModels
         private readonly User _currentUser;
         private readonly Action _onLogout;
         private static readonly string connectionString = DatabaseConfig.ConnectionString;
+        private readonly int? _editingSightingId;
 
         // ── BINDABLE PROPERTIES ──────────────────────────────
         private string _title = string.Empty;
@@ -72,6 +73,19 @@ namespace StandNatura.ViewModels
             set => SetProperty(ref _photoPath, value);
         }
 
+        // ── DYNAMIC TEXT BASED ON MODE ────────────────────────
+        public string SubmitButtonText => _editingSightingId.HasValue
+            ? "📤 Resubmit Sighting"
+            : "📍 Submit Sighting";
+
+        public string HeaderText => _editingSightingId.HasValue
+            ? "📝 Edit & Resubmit"
+            : "📍 Submit a Sighting";
+
+        public string SubHeaderText => _editingSightingId.HasValue
+            ? "Make any edits and resubmit for admin review."
+            : "Log a new sanctuary sighting for admin review.";
+
         // ── COMMANDS ──────────────────────────────────────────
         public ICommand GoBackCommand { get; }
         public ICommand BrowsePhotoCommand { get; }
@@ -87,6 +101,23 @@ namespace StandNatura.ViewModels
             GoBackCommand = new RelayCommand(() => _navigate(new ContributorHomeViewModel(_navigate, _currentUser, _onLogout)));
             BrowsePhotoCommand = new RelayCommand(BrowsePhoto);
             SubmitSightingCommand = new RelayCommand(SubmitSighting, CanSubmit);
+        }
+
+        // New constructor for editing/resubmitting
+        public SubmitSightingViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout, SightingDisplay existingSighting)
+            : this(navigate, currentUser, onLogout)
+        {
+            _editingSightingId = existingSighting.SightingId;
+
+            // Pre-fill the form
+            Title = existingSighting.Title;
+            Description = existingSighting.Description;
+            Location = existingSighting.Location;
+            Province = existingSighting.Province;
+            Region = existingSighting.Region;
+            Longitude = existingSighting.Longitude.ToString();
+            Latitude = existingSighting.Latitude.ToString();
+            PhotoPath = existingSighting.Photo;
         }
 
         // ── BROWSE PHOTO ──────────────────────────────────────
@@ -134,22 +165,48 @@ namespace StandNatura.ViewModels
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-
             try
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    string query = @"INSERT INTO Sighting 
-                        (UserId, Title, Description, DatePosted, Photo, Location, Province, Region, Longitude, Latitude, Status)
-                        VALUES 
-                        (@userId, @title, @description, GETDATE(), @photo, @location, @province, @region, @longitude, @latitude, 'Pending')";
+                    string query;
+
+                    if (_editingSightingId.HasValue)
+                    {
+                        // Edit/Resubmit mode — UPDATE existing row, reset status
+                        query = @"UPDATE Sighting SET 
+                            Title = @title,
+                            Description = @description,
+                            Photo = @photo,
+                            Location = @location,
+                            Province = @province,
+                            Region = @region,
+                            Longitude = @longitude,
+                            Latitude = @latitude,
+                            Status = 'Pending',
+                            DenialReason = NULL,
+                            DatePosted = GETDATE()
+                          WHERE SightingId = @sightingId";
+                    }
+                    else
+                    {
+                        // New submission — INSERT
+                        query = @"INSERT INTO Sighting 
+                    (UserId, Title, Description, DatePosted, Photo, Location, Province, Region, Longitude, Latitude, Status)
+                    VALUES 
+                    (@userId, @title, @description, GETDATE(), @photo, @location, @province, @region, @longitude, @latitude, 'Pending')";
+                    }
 
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@userId", _currentUser.Id);
+                        if (_editingSightingId.HasValue)
+                            command.Parameters.AddWithValue("@sightingId", _editingSightingId.Value);
+                        else
+                            command.Parameters.AddWithValue("@userId", _currentUser.Id);
+
                         command.Parameters.AddWithValue("@title", Title.Trim());
                         command.Parameters.AddWithValue("@description", Description.Trim());
-                        command.Parameters.AddWithValue("@photo", string.IsNullOrEmpty(PhotoPath) ? DBNull.Value : PhotoPath);
+                        command.Parameters.AddWithValue("@photo", string.IsNullOrEmpty(PhotoPath) ? DBNull.Value : (object)PhotoPath);
                         command.Parameters.AddWithValue("@location", Location.Trim());
                         command.Parameters.AddWithValue("@province", Province.Trim());
                         command.Parameters.AddWithValue("@region", Region.Trim());
@@ -160,10 +217,18 @@ namespace StandNatura.ViewModels
                     }
                 }
 
-                MessageBox.Show("Sighting submitted successfully! It will be reviewed by an admin.", "Success",
+                string successMessage = _editingSightingId.HasValue
+                    ? "Sighting resubmitted successfully! It will be reviewed by an admin."
+                    : "Sighting submitted successfully! It will be reviewed by an admin.";
+
+                MessageBox.Show(successMessage, "Success",
                     MessageBoxButton.OK, MessageBoxImage.Information);
 
-                ClearForm();
+                // After resubmit, navigate back to MySightings; otherwise just clear form
+                if (_editingSightingId.HasValue)
+                    _navigate(new MySightingsViewModel(_navigate, _currentUser, _onLogout));
+                else
+                    ClearForm();
             }
             catch (Exception ex)
             {

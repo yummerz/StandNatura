@@ -172,7 +172,7 @@
                                         Background="#1B4332"
                                         BorderBrush="#52B788"
                                         BorderThickness="2"
-                                        Height="120">
+                                        Height="180">
                                     <Grid>
                                         <TextBlock Text="No Photo"
                                                    Foreground="#95D5B2"
@@ -184,7 +184,7 @@
                                                        Converter={StaticResource NullToVisibilityConverter}}"/>
                                         <Image Source="{Binding SelectedSighting.Photo, 
                                                 Converter={StaticResource FilePathToImageConverter}}"
-                                                Stretch="UniformToFill"
+                                                Stretch="Uniform"
                                                 Visibility="{Binding SelectedSighting.Photo,
                                                 Converter={StaticResource NotNullToVisibilityConverter}}"/>
                                     </Grid>
@@ -242,6 +242,46 @@
                                 <Run Text="  Long: "/>
                                 <Run Text="{Binding SelectedSighting.Longitude}"/>
                             </TextBlock>
+                            <!-- Denial Reason (only shows if denied) -->
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedSighting.Status}" Value="Denied">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+
+                                <TextBlock Text="❌ Reason for Denial"
+                                FontSize="12" FontWeight="Bold"
+                                Foreground="#E05C6E"
+                                FontFamily="Trebuchet MS"
+                                Margin="0,12,0,2"/>
+                                <Border Background="#1B4332"
+                                    BorderBrush="#E05C6E"
+                                    BorderThickness="2"
+                                    Padding="10"
+                                    Margin="0,0,0,5">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedSighting.DenialReason}"
+                                    FontSize="13"
+                                    Foreground="#D8F3DC"
+                                    FontFamily="Trebuchet MS"
+                                    TextWrapping="Wrap"
+                                    Visibility="{Binding SelectedSighting.DenialReason, Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                                        <TextBlock Text="No reason was provided."
+                                    FontSize="13"
+                                    Foreground="#95D5B2"
+                                    FontFamily="Trebuchet MS"
+                                    FontStyle="Italic"
+                                    Visibility="{Binding SelectedSighting.DenialReason, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
 
                         </StackPanel>
                     </StackPanel>
@@ -254,28 +294,53 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
 
             <Button Grid.Column="0"
-                    Content="← Back"
-                    Height="45"
-                    Margin="0,0,10,0"
-                    Background="#2D6A4F"
-                    Foreground="#D8F3DC"
-                    FontFamily="Trebuchet MS"
-                    FontSize="14" FontWeight="Bold"
-                    BorderBrush="#52B788" BorderThickness="2"
-                    Command="{Binding GoBackCommand}"/>
-    
+            Content="← Back"
+            Height="45"
+            Margin="0,0,5,0"
+            Background="#2D6A4F"
+            Foreground="#D8F3DC"
+            FontFamily="Trebuchet MS"
+            FontSize="14" FontWeight="Bold"
+            BorderBrush="#52B788" BorderThickness="2"
+            Command="{Binding GoBackCommand}"/>
+
             <Button Grid.Column="1"
-                    Content="🗑️ Delete Sighting"
-                    Height="45"
-                    Background="#B7374A"
-                    Foreground="#FFFFFF"
-                    FontFamily="Trebuchet MS"
-                    FontSize="14" FontWeight="Bold"
-                    BorderBrush="#E05C6E" BorderThickness="2"
-                    Command="{Binding DeleteSightingCommand}"/>
+            Content="📤 Quick Resubmit"
+            Height="45"
+            Margin="5,0,5,0"
+            Background="#52B788"
+            Foreground="#1B4332"
+            FontFamily="Trebuchet MS"
+            FontSize="13" FontWeight="Bold"
+            BorderBrush="#74C69D" BorderThickness="2"
+            Command="{Binding QuickResubmitCommand}"/>
+
+            <Button Grid.Column="2"
+            Content="✏️ Edit &amp; Resubmit"
+            Height="45"
+            Margin="5,0,5,0"
+            Background="#52B788"
+            Foreground="#1B4332"
+            FontFamily="Trebuchet MS"
+            FontSize="13" FontWeight="Bold"
+            BorderBrush="#74C69D" BorderThickness="2"
+            Command="{Binding EditAndResubmitCommand}"/>
+
+            <Button Grid.Column="3"
+            Content="🗑️ Delete"
+            Height="45"
+            Margin="5,0,0,0"
+            Background="#B7374A"
+            Foreground="#FFFFFF"
+            FontFamily="Trebuchet MS"
+            FontSize="14" FontWeight="Bold"
+            BorderBrush="#E05C6E" BorderThickness="2"
+            Command="{Binding DeleteSightingCommand}"/>
         </Grid>
     </Grid>
 </UserControl>

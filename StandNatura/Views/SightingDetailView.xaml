@@ -36,7 +36,7 @@
             <StackPanel Margin="20,0,20,10">
 
                 <!-- Photo -->
-                <Border Height="250"
+                <Border Height="350"
                         Background="#2D6A4F"
                         BorderBrush="#52B788"
                         BorderThickness="2"
@@ -50,10 +50,10 @@
                                    VerticalAlignment="Center"
                                    Visibility="{Binding Sighting.Photo,
                                        Converter={StaticResource NullToVisibilityConverter}}"/>
-                        <Image Source="{Binding SelectedSighting.Photo, 
+                        <Image Source="{Binding Sighting.Photo, 
                                 Converter={StaticResource FilePathToImageConverter}}"
-                                Stretch="UniformToFill"
-                                Visibility="{Binding SelectedSighting.Photo,
+                                Stretch="Uniform"
+                                Visibility="{Binding Sighting.Photo,
                                 Converter={StaticResource NotNullToVisibilityConverter}}"/>
                     </Grid>
                 </Border>

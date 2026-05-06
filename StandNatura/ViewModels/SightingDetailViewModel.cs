@@ -53,6 +53,7 @@ namespace StandNatura.ViewModels
         {
             get => _donationAmount;
             set => SetProperty(ref _donationAmount, value);
+
         }
 
         private decimal _totalFunds;
@@ -298,7 +299,9 @@ namespace StandNatura.ViewModels
             }
         }
 
-        private bool CanDonate() => !string.IsNullOrWhiteSpace(DonationAmount);
+        private bool CanDonate() =>
+            !string.IsNullOrWhiteSpace(DonationAmount) && !CanComment;
+
 
         // ── CHECK IF CAN COMMENT ──────────────────────────────
         private void CheckIfCanComment()
@@ -307,7 +310,14 @@ namespace StandNatura.ViewModels
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    string query = "SELECT COUNT(*) FROM Donation WHERE UserId = @userId AND SightingId = @sightingId";
+                    // User can comment if they have a donation that hasn't been used for a comment yet
+                    string query = @"
+                SELECT COUNT(*) FROM Donation d
+                WHERE d.UserId = @userId 
+                  AND d.SightingId = @sightingId
+                  AND NOT EXISTS (
+                      SELECT 1 FROM Comment c WHERE c.DonationId = d.DonationId
+                  )";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@userId", _currentUser.Id);
@@ -375,9 +385,13 @@ namespace StandNatura.ViewModels
                     // Get latest donation id for this user and sighting
                     int donationId;
                     string getDonationQuery = @"
-                        SELECT TOP 1 DonationId FROM Donation
-                        WHERE UserId = @userId AND SightingId = @sightingId
-                        ORDER BY DonationId DESC";
+                        SELECT TOP 1 d.DonationId FROM Donation d
+                        WHERE d.UserId = @userId 
+                        AND d.SightingId = @sightingId
+                        AND NOT EXISTS (
+                        SELECT 1 FROM Comment c WHERE c.DonationId = d.DonationId
+                        )
+                        ORDER BY d.DonationId DESC";
 
                     using (SqlCommand command = new SqlCommand(getDonationQuery, connection))
                     {
@@ -399,6 +413,7 @@ namespace StandNatura.ViewModels
 
                 CommentText = string.Empty;
                 LoadComments();
+                CheckIfCanComment(); // Re-evaluate — they just used up their donation
             }
             catch (Exception ex)
             {
