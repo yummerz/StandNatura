@@ -175,18 +175,19 @@ namespace StandNatura.ViewModels
                     {
                         // Edit/Resubmit mode — UPDATE existing row, reset status
                         query = @"UPDATE Sighting SET 
-                            Title = @title,
-                            Description = @description,
-                            Photo = @photo,
-                            Location = @location,
-                            Province = @province,
-                            Region = @region,
-                            Longitude = @longitude,
-                            Latitude = @latitude,
-                            Status = 'Pending',
-                            DenialReason = NULL,
-                            DatePosted = GETDATE()
-                          WHERE SightingId = @sightingId";
+                                Title = @title,
+                                Description = @description,
+                                Photo = @photo,
+                                Location = @location,
+                                Province = @province,
+                                Region = @region,
+                                Longitude = @longitude,
+                                Latitude = @latitude,
+                                Status = 'Pending',
+                                DenialReason = NULL,
+                                ArchiveReason = NULL,
+                                DatePosted = GETDATE()
+                                WHERE SightingId = @sightingId";
                     }
                     else
                     {

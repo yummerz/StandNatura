@@ -42,12 +42,10 @@ namespace StandNatura.ViewModels
             _navigate = navigate;
             _currentUser = currentUser;
             _onLogout = onLogout;
-            EditAndResubmitCommand = new RelayCommand(EditAndResubmit, CanResubmit);
-            QuickResubmitCommand = new RelayCommand(QuickResubmit, CanResubmit);
-
-            GoBackCommand = new RelayCommand(() => _navigate(new ContributorHomeViewModel(_navigate, _currentUser, _onLogout)));
+            EditAndResubmitCommand = new RelayCommand(EditAndResubmit, CanEditAndResubmit);
+            QuickResubmitCommand = new RelayCommand(QuickResubmit, CanQuickResubmit);
             DeleteSightingCommand = new RelayCommand(DeleteSighting, CanDelete);
-
+            GoBackCommand = new RelayCommand(() => _navigate(new ContributorHomeViewModel(_navigate, _currentUser, _onLogout)));
             LoadMySightings();
         }
 
@@ -98,9 +96,14 @@ namespace StandNatura.ViewModels
             }
         }
 
-        // ── CAN RESUBMIT ──────────────────────────────────────
-        private bool CanResubmit() =>
+        // ── CAN QUICK RESUBMIT (Denied only) ──────────────────
+        private bool CanQuickResubmit() =>
             SelectedSighting != null && SelectedSighting.Status == "Denied";
+
+        // ── CAN EDIT AND RESUBMIT (Denied OR Archived) ────────
+        private bool CanEditAndResubmit() =>
+            SelectedSighting != null &&
+            (SelectedSighting.Status == "Denied" || SelectedSighting.Status == "Archived");
 
         // ── LOAD DATA ─────────────────────────────────────────
         private void LoadMySightings()
@@ -114,7 +117,7 @@ namespace StandNatura.ViewModels
                     string query = @"
                         SELECT s.SightingId, u.Username, s.Title, s.Description,
                         s.DatePosted, s.Location, s.Province, s.Region,
-                        s.Longitude, s.Latitude, s.Status, s.Photo, s.DenialReason
+                        s.Longitude, s.Latitude, s.Status, s.Photo, s.DenialReason, s.ArchiveReason
                     FROM Sighting s
                     INNER JOIN Users u ON s.UserId = u.Id
                     WHERE s.UserId = @userId
@@ -142,7 +145,8 @@ namespace StandNatura.ViewModels
                                     Latitude = (decimal)reader["Latitude"],
                                     Status = reader["Status"].ToString()!,
                                     Photo = reader["Photo"] == DBNull.Value ? string.Empty : reader["Photo"].ToString()!,
-                                    DenialReason = reader["DenialReason"] == DBNull.Value ? string.Empty : reader["DenialReason"].ToString()!
+                                    DenialReason = reader["DenialReason"] == DBNull.Value ? string.Empty : reader["DenialReason"].ToString()!,
+                                    ArchiveReason = reader["ArchiveReason"] == DBNull.Value ? string.Empty : reader["ArchiveReason"].ToString()!
                                 });
                             }
                         }
@@ -158,9 +162,9 @@ namespace StandNatura.ViewModels
         // ── DELETE SIGHTING ───────────────────────────────────
         private void DeleteSighting()
         {
-            if (SelectedSighting!.Status == "Approved")
+            if (SelectedSighting!.Status == "Approved" || SelectedSighting.Status == "Archived")
             {
-                MessageBox.Show("Approved sightings cannot be deleted.", "Action Blocked",
+                MessageBox.Show($"{SelectedSighting.Status} sightings cannot be deleted.", "Action Blocked",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }

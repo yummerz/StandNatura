@@ -16,6 +16,7 @@ namespace StandNatura.ViewModels
         public ICommand GoToManageUsersCommand { get; }
         public ICommand GoToSightingFeedCommand { get; }
         public ICommand GoToDonationsFundsCommand { get; }
+        public ICommand GoToHiddenSightingsCommand { get; }
         public ICommand LogoutCommand { get; }
 
         public AdminHomeViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout)
@@ -28,6 +29,7 @@ namespace StandNatura.ViewModels
             GoToManageUsersCommand = new RelayCommand(() => _navigate(new ManageUsersViewModel(_navigate, _currentUser, _onLogout)));
             GoToSightingFeedCommand = new RelayCommand(() => _navigate(new SightingFeedViewModel(_navigate, _currentUser, _onLogout)));
             GoToDonationsFundsCommand = new RelayCommand(() => _navigate(new DonationsFundsViewModel(_navigate, _currentUser, _onLogout)));
+            GoToHiddenSightingsCommand = new RelayCommand(() => _navigate(new HiddenSightingsViewModel(_navigate, _currentUser, _onLogout)));
             LogoutCommand = new RelayCommand(Logout);
         }
 

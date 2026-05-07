@@ -215,16 +215,31 @@
 
         <!-- Bottom Button -->
         <Grid Grid.Row="2" Margin="20,10,20,20">
-            <Button Content="← Back"
-                    Height="45"
-                    HorizontalAlignment="Left"
-                    Width="200"
-                    Background="#2D6A4F"
-                    Foreground="#D8F3DC"
-                    FontFamily="Trebuchet MS"
-                    FontSize="14" FontWeight="Bold"
-                    BorderBrush="#52B788" BorderThickness="2"
-                    Command="{Binding GoBackCommand}"/>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="200"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+            Content="← Back"
+            Height="45"
+            Background="#2D6A4F"
+            Foreground="#D8F3DC"
+            FontFamily="Trebuchet MS"
+            FontSize="14" FontWeight="Bold"
+            BorderBrush="#52B788" BorderThickness="2"
+            Command="{Binding GoBackCommand}"/>
+
+            <Button Grid.Column="2"
+            Content="🔍 Hide for Review"
+            Height="45"
+            Background="#FFD700"
+            Foreground="#1B4332"
+            FontFamily="Trebuchet MS"
+            FontSize="14" FontWeight="Bold"
+            BorderBrush="#74C69D" BorderThickness="2"
+            Command="{Binding HideForReviewCommand}"/>
         </Grid>
     </Grid>
 </UserControl>

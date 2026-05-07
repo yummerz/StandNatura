@@ -85,6 +85,16 @@
                     BorderBrush="#52B788" BorderThickness="2"
                     Command="{Binding GoToDonationsFundsCommand}"/>
 
+            <Button Content="🔍  Hidden Sightings"
+                    Width="320" Height="55"
+                    Margin="0,0,0,15"
+                    Background="#2D6A4F"
+                    Foreground="#D8F3DC"
+                    FontFamily="Trebuchet MS"
+                    FontSize="16" FontWeight="Bold"
+                    BorderBrush="#52B788" BorderThickness="2"
+                    Command="{Binding GoToHiddenSightingsCommand}"/>
+
         </StackPanel>
     </Grid>
 </UserControl>

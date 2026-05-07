@@ -32,6 +32,7 @@ namespace StandNatura.ViewModels
 
         // ── COMMANDS ──────────────────────────────────────────
         public ICommand GoBackCommand { get; }
+        public ICommand HideForReviewCommand { get; }
 
         // ── CONSTRUCTOR ───────────────────────────────────────
         public SightingFeedViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout)
@@ -40,6 +41,7 @@ namespace StandNatura.ViewModels
             _currentUser = currentUser;
             _onLogout = onLogout;
             GoBackCommand = new RelayCommand(() => _navigate(new AdminHomeViewModel(_navigate, _currentUser, _onLogout)));
+            HideForReviewCommand = new RelayCommand(HideForReview, CanHide);
 
             LoadApprovedSightings();
         }
@@ -56,7 +58,7 @@ namespace StandNatura.ViewModels
                     string query = @"
                 SELECT s.SightingId, u.Username, s.Title, s.Description,
                        s.DatePosted, s.Location, s.Province, s.Region,
-                       s.Longitude, s.Latitude, s.Photo
+                       s.Longitude, s.Latitude, s.Photo, s.ArchiveReason
                 FROM Sighting s
                 INNER JOIN Users u ON s.UserId = u.Id
                 WHERE s.Status = 'Approved'
@@ -81,7 +83,8 @@ namespace StandNatura.ViewModels
                                     Region = reader["Region"].ToString()!,
                                     Longitude = (decimal)reader["Longitude"],
                                     Latitude = (decimal)reader["Latitude"],
-                                    Photo = reader["Photo"] == DBNull.Value ? string.Empty : reader["Photo"].ToString()!
+                                    Photo = reader["Photo"] == DBNull.Value ? string.Empty : reader["Photo"].ToString()!,
+                                    ArchiveReason = reader["ArchiveReason"] == DBNull.Value ? string.Empty : reader["ArchiveReason"].ToString()!
                                 });
                             }
                         }
@@ -93,5 +96,45 @@ namespace StandNatura.ViewModels
                 MessageBox.Show("Failed to load sightings: " + ex.Message);
             }
         }
+        // ── HIDE FOR REVIEW ───────────────────────────────────
+        private void HideForReview()
+        {
+            var result = MessageBox.Show(
+                $"Hide \"{SelectedSighting!.Title}\" for further review?\n\n" +
+                "It will be temporarily removed from the public feed while you investigate. " +
+                "You can restore it or archive it permanently from the Hidden Sightings page.",
+                "Confirm Hide",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    string query = "UPDATE Sighting SET Status = 'Hidden' WHERE SightingId = @id";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@id", SelectedSighting.SightingId);
+                        connection.Open();
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                MessageBox.Show("Sighting hidden for review.", "Success",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+
+                SelectedSighting = null;
+                LoadApprovedSightings();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to hide sighting: " + ex.Message);
+            }
+        }
+
+        private bool CanHide() => SelectedSighting != null;
     }
 }
