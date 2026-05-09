@@ -33,6 +33,7 @@ namespace StandNatura.ViewModels
         // ── COMMANDS ──────────────────────────────────────────
         public ICommand GoBackCommand { get; }
         public ICommand HideForReviewCommand { get; }
+        public ICommand ViewDetailsCommand { get; }
 
         // ── CONSTRUCTOR ───────────────────────────────────────
         public SightingFeedViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout)
@@ -42,6 +43,7 @@ namespace StandNatura.ViewModels
             _onLogout = onLogout;
             GoBackCommand = new RelayCommand(() => _navigate(new AdminHomeViewModel(_navigate, _currentUser, _onLogout)));
             HideForReviewCommand = new RelayCommand(HideForReview, CanHide);
+            ViewDetailsCommand = new RelayCommand(ViewDetails, CanViewDetails);
 
             LoadApprovedSightings();
         }
@@ -136,5 +138,15 @@ namespace StandNatura.ViewModels
         }
 
         private bool CanHide() => SelectedSighting != null;
+
+        // ── VIEW DETAILS ──────────────────────────────────────
+        private void ViewDetails()
+        {
+            _navigate(new SightingDetailViewModel(_navigate, _currentUser, _onLogout, SelectedSighting!));
+        }
+
+        private bool CanViewDetails() => SelectedSighting != null;
+
     }
+
 }

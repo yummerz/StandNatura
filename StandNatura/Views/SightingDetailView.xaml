@@ -118,10 +118,20 @@
 
                 <!-- Petition Section -->
                 <Border Background="#2D6A4F"
-                        BorderBrush="#52B788"
-                        BorderThickness="2"
-                        Padding="15"
-                        Margin="0,0,0,15">
+        BorderBrush="#52B788"
+        BorderThickness="2"
+        Padding="15"
+        Margin="0,0,0,15">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsAdmin}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition/>
@@ -130,26 +140,26 @@
 
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="Protection Demand"
-                                       FontSize="14" FontWeight="Bold"
-                                       Foreground="#74C69D"
-                                       FontFamily="Trebuchet MS"/>
+                       FontSize="14" FontWeight="Bold"
+                       Foreground="#74C69D"
+                       FontFamily="Trebuchet MS"/>
                             <TextBlock FontSize="13"
-                                       Foreground="#D8F3DC"
-                                       FontFamily="Trebuchet MS">
-                                <Run Text="{Binding DemandCount}"/>
-                                <Run Text=" signatures demanding government protection"/>
+                       Foreground="#D8F3DC"
+                       FontFamily="Trebuchet MS">
+                <Run Text="{Binding DemandCount}"/>
+                <Run Text=" signatures demanding government protection"/>
                             </TextBlock>
                         </StackPanel>
 
                         <Button Grid.Column="1"
-                                Content="{Binding PetitionButtonText}"
-                                Height="40" Width="150"
-                                Background="#52B788"
-                                Foreground="#1B4332"
-                                FontFamily="Trebuchet MS"
-                                FontSize="12" FontWeight="Bold"
-                                BorderBrush="#74C69D" BorderThickness="2"
-                                Command="{Binding SignPetitionCommand}"/>
+                Content="{Binding PetitionButtonText}"
+                Height="40" Width="150"
+                Background="#52B788"
+                Foreground="#1B4332"
+                FontFamily="Trebuchet MS"
+                FontSize="12" FontWeight="Bold"
+                BorderBrush="#74C69D" BorderThickness="2"
+                Command="{Binding SignPetitionCommand}"/>
                     </Grid>
                 </Border>
 
@@ -159,6 +169,16 @@
                         BorderThickness="2"
                         Padding="15"
                         Margin="0,0,0,15">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsAdmin}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <StackPanel>
                         <TextBlock Text="💰 Support This Sanctuary"
                                    FontSize="14" FontWeight="Bold"
@@ -219,6 +239,16 @@
                         BorderThickness="2"
                         Padding="15"
                         Margin="0,0,0,10">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsAdmin}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <StackPanel>
                         <TextBlock FontSize="12"
                                    Foreground="#95D5B2"
@@ -265,26 +295,61 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border Background="#2D6A4F"
-                                    BorderBrush="#52B788"
-                                    BorderThickness="2"
-                                    Padding="12"
-                                    Margin="0,0,0,8">
-                                <StackPanel>
-                                    <TextBlock FontSize="13" FontWeight="Bold"
-                                               Foreground="#74C69D"
-                                               FontFamily="Trebuchet MS">
-                                        <Run Text="{Binding DonorUsername}"/>
-                                        <Run Text=" · "/>
-                                        <Run Text="{Binding Amount, StringFormat='₱{0:N2}'}"
-                                             Foreground="#52B788"/>
-                                    </TextBlock>
-                                    <TextBlock Text="{Binding CommentText}"
-                                               FontSize="13"
-                                               Foreground="#D8F3DC"
-                                               FontFamily="Trebuchet MS"
-                                               TextWrapping="Wrap"
-                                               Margin="0,5,0,0"/>
-                                </StackPanel>
+                    BorderBrush="#52B788"
+                    BorderThickness="2"
+                    Padding="12"
+                    Margin="0,0,0,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock FontSize="13" FontWeight="Bold"
+                                   Foreground="#74C69D"
+                                   FontFamily="Trebuchet MS">
+                            <Run Text="{Binding DonorUsername}"/>
+                            <Run Text=" · "/>
+                            <Run Text="{Binding Amount, StringFormat='₱{0:N2}'}"
+                                 Foreground="#52B788"/>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding CommentText}"
+                                   FontSize="13"
+                                   Foreground="#D8F3DC"
+                                   FontFamily="Trebuchet MS"
+                                   TextWrapping="Wrap"
+                                   Margin="0,5,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Delete button (admin only) -->
+                                    <Button Grid.Column="1"
+                            Content="🗑️"
+                            Width="35" Height="35"
+                            VerticalAlignment="Top"
+                            Margin="10,0,0,0"
+                            Background="#B7374A"
+                            Foreground="#FFFFFF"
+                            FontFamily="Trebuchet MS"
+                            FontSize="14" FontWeight="Bold"
+                            BorderBrush="#E05C6E" BorderThickness="2"
+                            ToolTip="Delete this comment"
+                            Command="{Binding DataContext.DeleteCommentCommand,
+                                RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                            CommandParameter="{Binding}">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding DataContext.IsAdmin,
+                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </Grid>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

@@ -10,9 +10,11 @@ namespace StandNatura.ViewModels
 {
     public class CommentDisplay
     {
+        public int CommentId { get; set; }
         public string DonorUsername { get; set; } = string.Empty;
         public decimal Amount { get; set; }
         public string CommentText { get; set; } = string.Empty;
+
     }
 
     public class SightingDetailViewModel : BaseViewModel
@@ -21,6 +23,9 @@ namespace StandNatura.ViewModels
         private readonly User _currentUser;
         private readonly Action _onLogout;
         private static readonly string connectionString = DatabaseConfig.ConnectionString;
+        // ── ADMIN MODE ────────────────────────────────────────
+        public bool IsAdmin => _currentUser.Role == "Admin";
+        public bool IsContributor => _currentUser.Role != "Admin";
 
         // ── SIGHTING INFO ─────────────────────────────────────
         public SightingDisplay Sighting { get; }
@@ -90,6 +95,7 @@ namespace StandNatura.ViewModels
         public ICommand SignPetitionCommand { get; }
         public ICommand DonateCommand { get; }
         public ICommand PostCommentCommand { get; }
+        public ICommand DeleteCommentCommand { get; }
 
         // ── CONSTRUCTOR ───────────────────────────────────────
         public SightingDetailViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout, SightingDisplay sighting)
@@ -99,10 +105,11 @@ namespace StandNatura.ViewModels
             _onLogout = onLogout;
             Sighting = sighting;
 
-            GoBackCommand = new RelayCommand(() => _navigate(new ContributorHomeViewModel(_navigate, _currentUser, _onLogout)));
+            GoBackCommand = new RelayCommand(GoBack);
             SignPetitionCommand = new RelayCommand(SignPetition);
             DonateCommand = new RelayCommand(Donate, CanDonate);
             PostCommentCommand = new RelayCommand(PostComment, CanPostComment);
+            DeleteCommentCommand = new RelayCommand<CommentDisplay>(DeleteComment, CanDeleteComment);
 
             LoadPetition();
             LoadTotalFunds();
@@ -344,11 +351,11 @@ namespace StandNatura.ViewModels
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     string query = @"
-                        SELECT u.Username, d.Amount, c.CommentText
-                        FROM Comment c
-                        INNER JOIN Donation d ON c.DonationId = d.DonationId
-                        INNER JOIN Users u ON d.UserId = u.Id
-                        WHERE c.SightingId = @sightingId";
+                    SELECT c.CommentId, u.Username, d.Amount, c.CommentText
+                    FROM Comment c
+                    INNER JOIN Donation d ON c.DonationId = d.DonationId
+                    INNER JOIN Users u ON d.UserId = u.Id
+                    WHERE c.SightingId = @sightingId";
 
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
@@ -360,6 +367,7 @@ namespace StandNatura.ViewModels
                             {
                                 Comments.Add(new CommentDisplay
                                 {
+                                    CommentId = (int)reader["CommentId"],
                                     DonorUsername = reader["Username"].ToString()!,
                                     Amount = (decimal)reader["Amount"],
                                     CommentText = reader["CommentText"].ToString()!
@@ -420,8 +428,54 @@ namespace StandNatura.ViewModels
                 MessageBox.Show("Failed to post comment: " + ex.Message);
             }
         }
+        // ── DELETE COMMENT (Admin only) ───────────────────────
+        private void DeleteComment(CommentDisplay comment)
+        {
+            var result = MessageBox.Show(
+                "Are you sure you want to delete this comment?\n\n" +
+                "The comment text will be replaced with a moderation notice. " +
+                "The donation itself will not be affected.",
+                "Confirm Delete Comment",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    string query = "UPDATE Comment SET CommentText = @newText WHERE CommentId = @id";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@newText", "[Comment removed by moderator]");
+                        command.Parameters.AddWithValue("@id", comment.CommentId);
+                        connection.Open();
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                LoadComments();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to delete comment: " + ex.Message);
+            }
+        }
+
+        private bool CanDeleteComment(CommentDisplay comment) => IsAdmin && comment != null;
 
         private bool CanPostComment() =>
             CanComment && !string.IsNullOrWhiteSpace(CommentText);
+
+        // ── GO BACK ───────────────────────────────────────────
+        private void GoBack()
+        {
+            if (IsAdmin)
+                _navigate(new SightingFeedViewModel(_navigate, _currentUser, _onLogout));
+            else
+                _navigate(new ContributorHomeViewModel(_navigate, _currentUser, _onLogout));
+        }
     }
 }
