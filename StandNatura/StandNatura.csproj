@@ -9,7 +9,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\HomeBackground.jpg" />
+    <None Remove="Assets\LoginBackground.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\HomeBackground.jpg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\LoginBackground.jpg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

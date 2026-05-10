@@ -4,102 +4,303 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d">
-    <Grid Background="#1B4332">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
 
-        <Viewbox Grid.Column="1">
-            <StackPanel Width="250" Height="600">
+    <!-- ============================================================
+         REGISTER VIEW
+         Layered structure (back to front):
+           1. Background photo (same as login for consistency)
+           2. Vignette          — dark gradient overlay for legibility
+           3. Content           — brand block + frosted-glass form panel
+         ============================================================ -->
 
-                <!-- Title -->
-                <TextBlock Text="🌿 StandNatura"
-                           FontSize="38" FontWeight="Bold"
-                           Foreground="#74C69D"
-                           HorizontalAlignment="Center"
-                           FontFamily="Trebuchet MS"
-                           Margin="0,40,0,0"/>
+    <Grid>
 
-                <TextBlock Text="Create an Account"
-                           FontSize="13"
-                           Foreground="#95D5B2"
-                           HorizontalAlignment="Center"
-                           FontFamily="Trebuchet MS"
-                           Margin="0,4,0,30"/>
+        <!-- ─────────────────────────────────────────────────
+             LAYER 1: Background photo
+             ───────────────────────────────────────────────── -->
+        <Image Source="/Assets/LoginBackground.jpg"
+               Stretch="UniformToFill"
+               IsHitTestVisible="False"/>
 
-                <!-- Username -->
-                <TextBlock Text="Username"
-                           FontSize="14" FontWeight="SemiBold"
-                           Foreground="#D8F3DC"
-                           FontFamily="Trebuchet MS"
-                           Margin="0,0,0,5"/>
-                <TextBox Width="250"
-                         Background="#2D6A4F"
-                         Foreground="#FFFFFF"
-                         BorderBrush="#52B788"
-                         BorderThickness="2"
-                         Padding="5,8,5,8"
-                         FontSize="14"
-                         Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"/>
+        <!-- ─────────────────────────────────────────────────
+             LAYER 2: Vignette overlay
+             ───────────────────────────────────────────────── -->
+        <Rectangle IsHitTestVisible="False">
+            <Rectangle.Fill>
+                <RadialGradientBrush GradientOrigin="0.5,0.5" Center="0.5,0.5" RadiusX="0.85" RadiusY="0.85">
+                    <GradientStop Color="#00000000" Offset="0.4"/>
+                    <GradientStop Color="#80000000" Offset="1"/>
+                </RadialGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
 
-                <!-- Password -->
-                <TextBlock Text="Password"
-                           FontSize="14" FontWeight="SemiBold"
-                           Foreground="#D8F3DC"
-                           FontFamily="Trebuchet MS"
-                           Margin="0,20,0,5"/>
-                <PasswordBox x:Name="PasswordInput"
-                             Width="250"
-                             Background="#2D6A4F"
-                             Foreground="#FFFFFF"
-                             BorderBrush="#52B788"
-                             BorderThickness="2"
-                             Padding="5,8,5,8"
-                             FontSize="14"/>
+        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" MaxWidth="500">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40">
 
-                <!-- Confirm Password -->
-                <TextBlock Text="Confirm Password"
-                           FontSize="14" FontWeight="SemiBold"
-                           Foreground="#D8F3DC"
-                           FontFamily="Trebuchet MS"
-                           Margin="0,20,0,5"/>
-                <PasswordBox x:Name="ConfirmPasswordInput"
-                             Width="250"
-                             Background="#2D6A4F"
-                             Foreground="#FFFFFF"
-                             BorderBrush="#52B788"
-                             BorderThickness="2"
-                             Padding="5,8,5,8"
-                             FontSize="14"/>
+                <!-- ── Brand block: backdrop + logo + wordmark + tagline ── -->
+                <Border Padding="40,25,40,25"
+                        CornerRadius="12"
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,30">
+                    <Border.Background>
+                        <RadialGradientBrush GradientOrigin="0.5,0.5" Center="0.5,0.5" RadiusX="0.7" RadiusY="0.7">
+                            <GradientStop Color="#660D2818" Offset="0"/>
+                            <GradientStop Color="#330D2818" Offset="0.7"/>
+                            <GradientStop Color="#000D2818" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Border.Background>
+                    <StackPanel HorizontalAlignment="Center">
 
-                <!-- Register Button -->
-                <Button Content="Create Account"
-                        Width="250"
-                        Margin="0,30,0,0"
-                        Background="#52B788"
-                        Foreground="#1B4332"
-                        FontFamily="Trebuchet MS"
-                        FontSize="15" FontWeight="Bold"
-                        Padding="10,8,10,8"
-                        BorderBrush="#74C69D" BorderThickness="2"
-                        Command="{Binding RegisterCommand}"
-                        Click="RegisterButton_Click"/>
+                        <!-- Outlined Leaf Logo with stronger glow -->
+                        <Grid Width="110" Height="110" HorizontalAlignment="Center" Margin="0,0,0,18">
+                            <Path Stroke="#5FA572"
+                                  StrokeThickness="3.5"
+                                  StrokeLineJoin="Round"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  Fill="Transparent"
+                                  Stretch="Uniform"
+                                  Data="M 50,5 C 20,15 5,40 10,75 C 40,75 75,55 80,15 C 70,12 60,10 50,5 Z M 18,68 C 35,55 55,40 65,20">
+                                <Path.Effect>
+                                    <DropShadowEffect Color="#5FA572"
+                                                      BlurRadius="35"
+                                                      ShadowDepth="0"
+                                                      Opacity="0.85"/>
+                                </Path.Effect>
+                            </Path>
+                        </Grid>
 
-                <!-- Back to Login -->
-                <Button Content="← Back to Login"
-                        Width="250"
-                        Margin="0,10,0,0"
-                        Background="Transparent"
-                        Foreground="#74C69D"
-                        FontFamily="Trebuchet MS"
-                        FontSize="13"
-                        Padding="10,8,10,8"
-                        BorderThickness="0"
-                        Command="{Binding GoBackCommand}"/>
+                        <!-- Wordmark — bolder, larger, with letter spacing -->
+                        <TextBlock Text="StandNatura"
+                                   FontSize="44"
+                                   FontWeight="SemiBold"
+                                   Foreground="#F5F0E8"
+                                   HorizontalAlignment="Center"
+                                   FontFamily="Trebuchet MS"
+                                   Typography.Capitals="AllSmallCaps">
+                            <TextBlock.Effect>
+                                <DropShadowEffect Color="#000000"
+                                                  BlurRadius="15"
+                                                  ShadowDepth="0"
+                                                  Opacity="0.7"/>
+                            </TextBlock.Effect>
+                        </TextBlock>
+
+                        <!-- Tagline with stacked glow effects -->
+                        <Grid HorizontalAlignment="Center" Margin="0,2,0,0">
+
+                            <!-- Glow layer 1 (large amber halo) -->
+                            <TextBlock Text="Where nature finds its defenders"
+               FontSize="14"
+               Foreground="#D4A574"
+               HorizontalAlignment="Center"
+               FontFamily="Trebuchet MS"
+               FontStyle="Italic">
+                                <TextBlock.Effect>
+                                    <BlurEffect Radius="25"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+
+                            <!-- Glow layer 2 (medium amber halo) -->
+                            <TextBlock Text="Where nature finds its defenders"
+               FontSize="14"
+               Foreground="#D4A574"
+               HorizontalAlignment="Center"
+               FontFamily="Trebuchet MS"
+               FontStyle="Italic">
+                                <TextBlock.Effect>
+                                    <BlurEffect Radius="10"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+
+                            <!-- The actual readable text on top -->
+                            <TextBlock Text="Where nature finds its defenders"
+               FontSize="14"
+               Foreground="#F5E6CC"
+               HorizontalAlignment="Center"
+               FontFamily="Trebuchet MS"
+               FontStyle="Italic">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect Color="#000000"
+                              BlurRadius="8"
+                              ShadowDepth="0"
+                              Opacity="0.7"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+
+                        </Grid>
+
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Frosted-glass form panel ── -->
+                <Border Width="380"
+                        Padding="35,30,35,30"
+                        CornerRadius="8">
+                    <Border.Background>
+                        <SolidColorBrush Color="#1F4030" Opacity="0.7"/>
+                    </Border.Background>
+                    <Border.BorderBrush>
+                        <SolidColorBrush Color="#5FA572" Opacity="0.4"/>
+                    </Border.BorderBrush>
+                    <Border.BorderThickness>1</Border.BorderThickness>
+                    <Border.Effect>
+                        <DropShadowEffect Color="#000000"
+                                          BlurRadius="30"
+                                          ShadowDepth="0"
+                                          Opacity="0.5"/>
+                    </Border.Effect>
+
+                    <StackPanel>
+
+                        <!-- Form heading -->
+                        <TextBlock Text="Join the movement"
+                                   FontSize="20"
+                                   FontWeight="SemiBold"
+                                   Foreground="#F5F0E8"
+                                   FontFamily="Trebuchet MS"/>
+                        <TextBlock Text="Create your account to start protecting nature"
+                                   FontSize="12"
+                                   Foreground="#9BB39E"
+                                   FontFamily="Trebuchet MS"
+                                   TextWrapping="Wrap"
+                                   Margin="0,2,0,25"/>
+
+                        <!-- Username -->
+                        <TextBlock Text="USERNAME"
+                                   FontSize="10"
+                                   FontWeight="Bold"
+                                   Foreground="#9BB39E"
+                                   FontFamily="Trebuchet MS"
+                                   Margin="0,0,0,6"/>
+                        <Border Background="#330D2818"
+                                BorderBrush="#5FA572"
+                                BorderThickness="1"
+                                CornerRadius="4">
+                            <TextBox Background="Transparent"
+                                     Foreground="#F5F0E8"
+                                     CaretBrush="#5FA572"
+                                     BorderThickness="0"
+                                     Padding="12,10,12,10"
+                                     FontSize="14"
+                                     FontFamily="Trebuchet MS"
+                                     Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"/>
+                        </Border>
+
+                        <!-- Password -->
+                        <TextBlock Text="PASSWORD"
+                                   FontSize="10"
+                                   FontWeight="Bold"
+                                   Foreground="#9BB39E"
+                                   FontFamily="Trebuchet MS"
+                                   Margin="0,18,0,6"/>
+                        <Border Background="#330D2818"
+                                BorderBrush="#5FA572"
+                                BorderThickness="1"
+                                CornerRadius="4">
+                            <PasswordBox x:Name="PasswordInput"
+                                         Background="Transparent"
+                                         Foreground="#F5F0E8"
+                                         CaretBrush="#5FA572"
+                                         BorderThickness="0"
+                                         Padding="12,10,12,10"
+                                         FontSize="14"
+                                         FontFamily="Trebuchet MS"/>
+                        </Border>
+
+                        <!-- Confirm Password -->
+                        <TextBlock Text="CONFIRM PASSWORD"
+                                   FontSize="10"
+                                   FontWeight="Bold"
+                                   Foreground="#9BB39E"
+                                   FontFamily="Trebuchet MS"
+                                   Margin="0,18,0,6"/>
+                        <Border Background="#330D2818"
+                                BorderBrush="#5FA572"
+                                BorderThickness="1"
+                                CornerRadius="4">
+                            <PasswordBox x:Name="ConfirmPasswordInput"
+                                         Background="Transparent"
+                                         Foreground="#F5F0E8"
+                                         CaretBrush="#5FA572"
+                                         BorderThickness="0"
+                                         Padding="12,10,12,10"
+                                         FontSize="14"
+                                         FontFamily="Trebuchet MS"/>
+                        </Border>
+
+                        <!-- Create Account button -->
+                        <Button Content="Create Account"
+                                Margin="0,30,0,0"
+                                Height="44"
+                                Background="#5FA572"
+                                Foreground="#0D2818"
+                                FontFamily="Trebuchet MS"
+                                FontSize="14"
+                                FontWeight="Bold"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Command="{Binding RegisterCommand}"
+                                Click="RegisterButton_Click">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="4"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+
+                        <!-- Divider with "or" -->
+                        <Grid Margin="0,20,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0"
+                                    Height="1"
+                                    Background="#5FA572"
+                                    Opacity="0.3"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="or"
+                                       Foreground="#9BB39E"
+                                       FontFamily="Trebuchet MS"
+                                       FontSize="11"
+                                       Margin="12,0,12,0"/>
+                            <Border Grid.Column="2"
+                                    Height="1"
+                                    Background="#5FA572"
+                                    Opacity="0.3"
+                                    VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <!-- Back to Login link -->
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,20,0,0">
+                            <TextBlock Text="Already have an account?"
+                                       Foreground="#9BB39E"
+                                       FontFamily="Trebuchet MS"
+                                       FontSize="12"
+                                       VerticalAlignment="Center"/>
+                            <Button Content="Sign in →"
+                                    Margin="6,0,0,0"
+                                    Background="Transparent"
+                                    Foreground="#D4A574"
+                                    FontFamily="Trebuchet MS"
+                                    FontSize="12"
+                                    FontWeight="Bold"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    Padding="0"
+                                    Command="{Binding GoBackCommand}"/>
+                        </StackPanel>
+
+                    </StackPanel>
+                </Border>
 
             </StackPanel>
         </Viewbox>
+
     </Grid>
 </UserControl>

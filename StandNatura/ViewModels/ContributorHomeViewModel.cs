@@ -16,7 +16,7 @@ namespace StandNatura.ViewModels
         private static readonly string connectionString = DatabaseConfig.ConnectionString;
 
         // ── BINDABLE PROPERTIES ──────────────────────────────
-        public string WelcomeMessage => $"👋 {_currentUser.Username}";
+        public string WelcomeMessage => _currentUser.Username;
 
         private ObservableCollection<SightingDisplay> _sightings = new();
         public ObservableCollection<SightingDisplay> Sightings

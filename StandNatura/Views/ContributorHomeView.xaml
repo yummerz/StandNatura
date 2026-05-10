@@ -4,171 +4,503 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d">
-    <Grid Background="#1B4332">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="3*"/>
-            <ColumnDefinition Width="200"/>
-        </Grid.ColumnDefinitions>
 
-        <!-- Left: Community Feed -->
-        <Grid Grid.Column="0" Margin="20,20,10,20">
+    <UserControl.Resources>
+        <!-- Menu item button style — clean hover with green tint -->
+        <Style x:Key="MenuItemButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="25,12,25,12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#D8E5DA"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Left"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background">
+                                    <Setter.Value>
+                                        <SolidColorBrush Color="#5FA572" Opacity="0.10"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <!-- ============================================================
+         CONTRIBUTOR HOME VIEW
+         Layered structure (back to front):
+           1. Background photo (calmer, more abstract than login)
+           2. Heavy darkening overlay
+           3. Main content (header bar + card grid)
+           4. Menu dim overlay (only visible when menu is open)
+           5. Sliding hamburger menu panel
+         ============================================================ -->
+
+    <Grid x:Name="RootGrid">
+
+        <!-- ─────────────────────────────────────────────────
+             LAYER 1: Background photo
+             ───────────────────────────────────────────────── -->
+        <Image Source="/Assets/HomeBackground.jpg"
+               Stretch="UniformToFill"
+               IsHitTestVisible="False"/>
+
+        <!-- ─────────────────────────────────────────────────
+             LAYER 2: Heavy darkening overlay
+             ───────────────────────────────────────────────── -->
+        <Rectangle IsHitTestVisible="False">
+            <Rectangle.Fill>
+                <SolidColorBrush Color="#0D2818" Opacity="0.75"/>
+            </Rectangle.Fill>
+        </Rectangle>
+
+        <!-- ─────────────────────────────────────────────────
+             LAYER 3: Main content
+             ───────────────────────────────────────────────── -->
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Feed Header -->
-            <StackPanel Grid.Row="0" Margin="0,0,0,15">
-                <TextBlock Text="🌿 StandNatura"
-                           FontSize="32" FontWeight="Bold"
-                           Foreground="#74C69D"
-                           FontFamily="Trebuchet MS"/>
-                <TextBlock Text="Community Sighting Feed"
-                           FontSize="14"
-                           Foreground="#95D5B2"
-                           FontFamily="Trebuchet MS"
-                           Margin="0,4,0,0"/>
-            </StackPanel>
+            <!-- ────────── Top header bar ────────── -->
+            <Border Grid.Row="0"
+                    Padding="20,15,30,15"
+                    BorderBrush="#5FA572"
+                    BorderThickness="0,0,0,1">
+                <Border.Background>
+                    <SolidColorBrush Color="#0D2818" Opacity="0.6"/>
+                </Border.Background>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-            <!-- Feed List -->
-            <ListBox Grid.Row="1"
-                     ItemsSource="{Binding Sightings}"
-                     SelectedItem="{Binding SelectedSighting}"
-                     Background="#2D6A4F"
-                     Foreground="#D8F3DC"
-                     BorderBrush="#52B788"
-                     BorderThickness="2"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Border Margin="5" Padding="12"
-                                Background="#1B4332"
-                                CornerRadius="4">
-                            <StackPanel>
-                                <!-- Photo Preview -->
-                                <Border Height="200"
-                                        Background="#2D6A4F"
-                                        Margin="0,0,0,10">
-                                    <Grid>
-                                        <TextBlock Text="🌿 No Photo"
-                                                   Foreground="#95D5B2"
-                                                   FontFamily="Trebuchet MS"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   Visibility="{Binding Photo,
-                                                       Converter={StaticResource NullToVisibilityConverter}}"/>
-                                        <Image Source="{Binding Photo, 
-                                            Converter={StaticResource FilePathToImageConverter}}"
-                                            Stretch="Uniform"
-                                            Visibility="{Binding Photo,
-                                            Converter={StaticResource NotNullToVisibilityConverter}}"/>
-                                    </Grid>
+                    <!-- Hamburger toggle button + brand mark -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+
+                        <!-- Hamburger button -->
+                        <Button x:Name="MenuToggleButton"
+                                Width="40" Height="40"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Click="MenuToggleButton_Click">
+                            <Path Stroke="#F5F0E8"
+                                  StrokeThickness="2"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  Data="M 4,8 H 24 M 4,14 H 24 M 4,20 H 24"/>
+                        </Button>
+
+                        <!-- Mini leaf logo + wordmark -->
+                        <Path Width="28" Height="28"
+                              Margin="15,0,8,0"
+                              Stroke="#5FA572"
+                              StrokeThickness="2"
+                              StrokeLineJoin="Round"
+                              Fill="Transparent"
+                              Stretch="Uniform"
+                              Data="M 50,5 C 20,15 5,40 10,75 C 40,75 75,55 80,15 C 70,12 60,10 50,5 Z M 18,68 C 35,55 55,40 65,20"
+                              VerticalAlignment="Center">
+                            <Path.Effect>
+                                <DropShadowEffect Color="#5FA572"
+                                                  BlurRadius="12"
+                                                  ShadowDepth="0"
+                                                  Opacity="0.6"/>
+                            </Path.Effect>
+                        </Path>
+                        <TextBlock Text="StandNatura"
+                                   FontSize="20"
+                                   FontWeight="SemiBold"
+                                   Foreground="#F5F0E8"
+                                   FontFamily="Trebuchet MS"
+                                   VerticalAlignment="Center"
+                                   Typography.Capitals="AllSmallCaps"/>
+                    </StackPanel>
+
+                    <!-- Welcome message on the right -->
+                    <TextBlock Grid.Column="2"
+                               Text="{Binding WelcomeMessage}"
+                               FontSize="14"
+                               Foreground="#9BB39E"
+                               FontFamily="Trebuchet MS"
+                               VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
+            <!-- ────────── Main content area ────────── -->
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="40,30,40,30">
+
+                    <!-- Section title -->
+                    <TextBlock Text="Community Sightings"
+                               FontSize="32"
+                               FontWeight="SemiBold"
+                               Foreground="#F5F0E8"
+                               FontFamily="Trebuchet MS"/>
+                    <TextBlock Text="Sanctuaries discovered by our community of defenders"
+                               FontSize="14"
+                               Foreground="#9BB39E"
+                               FontFamily="Trebuchet MS"
+                               FontStyle="Italic"
+                               Margin="0,4,0,30"/>
+
+                    <!-- Card grid: 3 cards per row -->
+                    <ItemsControl ItemsSource="{Binding Sightings}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="3"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+
+                                <!-- Card -->
+                                <Border Margin="10"
+                                        CornerRadius="10"
+                                        ClipToBounds="True">
+                                    <Border.Background>
+                                        <SolidColorBrush Color="#1F4030" Opacity="0.85"/>
+                                    </Border.Background>
+                                    <Border.BorderBrush>
+                                        <SolidColorBrush Color="#5FA572" Opacity="0.3"/>
+                                    </Border.BorderBrush>
+                                    <Border.BorderThickness>1</Border.BorderThickness>
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#000000"
+                                                          BlurRadius="20"
+                                                          ShadowDepth="0"
+                                                          Opacity="0.4"/>
+                                    </Border.Effect>
+
+                                    <StackPanel>
+
+                                        <!-- Photo (top of card) -->
+                                        <Border Height="180"
+                                                Background="#0D2818">
+                                            <Grid>
+                                                <TextBlock Text="🌿 No Photo"
+                                                           Foreground="#9BB39E"
+                                                           FontFamily="Trebuchet MS"
+                                                           FontSize="13"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"
+                                                           Visibility="{Binding Photo,
+                                                               Converter={StaticResource NullToVisibilityConverter}}"/>
+                                                <Image Source="{Binding Photo,
+                                                        Converter={StaticResource FilePathToImageConverter}}"
+                                                       Stretch="UniformToFill"
+                                                       Visibility="{Binding Photo,
+                                                           Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- Card body -->
+                                        <StackPanel Margin="18,14,18,18">
+
+                                            <!-- Title -->
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontSize="17"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#F5F0E8"
+                                                       FontFamily="Trebuchet MS"
+                                                       TextWrapping="Wrap"
+                                                       MaxHeight="48"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <!-- Contributor -->
+                                            <TextBlock FontSize="12"
+                                                       Foreground="#D4A574"
+                                                       FontFamily="Trebuchet MS"
+                                                       Margin="0,6,0,0">
+                                                <Run Text="By "/>
+                                                <Run Text="{Binding Username}" FontWeight="Bold"/>
+                                            </TextBlock>
+
+                                            <!-- Province (with location pin) -->
+                                            <TextBlock FontSize="12"
+                                                       Foreground="#9BB39E"
+                                                       FontFamily="Trebuchet MS"
+                                                       Margin="0,3,0,0">
+                                                <Run Text="📍 "/>
+                                                <Run Text="{Binding Province}"/>
+                                            </TextBlock>
+
+                                            <!-- View Sighting button -->
+                                            <Button Content="View Sighting →"
+                                                    Margin="0,16,0,0"
+                                                    Height="38"
+                                                    Background="#5FA572"
+                                                    Foreground="#0D2818"
+                                                    FontFamily="Trebuchet MS"
+                                                    FontSize="13"
+                                                    FontWeight="Bold"
+                                                    BorderThickness="0"
+                                                    Cursor="Hand"
+                                                    Command="{Binding DataContext.ViewSightingCommand,
+                                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}">
+                                                <Button.Resources>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="CornerRadius" Value="4"/>
+                                                    </Style>
+                                                </Button.Resources>
+                                            </Button>
+                                        </StackPanel>
+                                    </StackPanel>
                                 </Border>
 
-                                <!-- Sighting Info -->
-                                <TextBlock Text="{Binding Title}"
-                                           FontSize="16" FontWeight="Bold"
-                                           Foreground="#74C69D"
-                                           FontFamily="Trebuchet MS"
-                                           TextWrapping="Wrap"/>
-                                <TextBlock FontSize="12"
-                                           Foreground="#95D5B2"
-                                           FontFamily="Trebuchet MS"
-                                           Margin="0,4,0,0">
-                                    <Run Text="By "/>
-                                    <Run Text="{Binding Username}" FontWeight="Bold"/>
-                                </TextBlock>
-                                <TextBlock FontSize="12"
-                                           Foreground="#95D5B2"
-                                           FontFamily="Trebuchet MS">
-                                    <Run Text="{Binding Location}"/>
-                                    <Run Text=", "/>
-                                    <Run Text="{Binding Province}"/>
-                                </TextBlock>
-                                <TextBlock Text="{Binding DatePosted}"
-                                           FontSize="11"
-                                           Foreground="#74C69D"
-                                           FontFamily="Trebuchet MS"
-                                           Margin="0,4,0,8"/>
-                                <TextBlock Text="{Binding Description}"
-                                           FontSize="12"
-                                           Foreground="#D8F3DC"
-                                           FontFamily="Trebuchet MS"
-                                           TextWrapping="Wrap"
-                                           MaxHeight="60"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
-                                <!-- View Button -->
-                                <Button Content="View Sighting →"
-                                        Margin="0,10,0,0"
-                                        Background="#52B788"
-                                        Foreground="#1B4332"
-                                        FontFamily="Trebuchet MS"
-                                        FontSize="12" FontWeight="Bold"
-                                        Padding="8,6,8,6"
-                                        BorderBrush="#74C69D" BorderThickness="1"
-                                        Command="{Binding DataContext.ViewSightingCommand,
-                                            RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- ─────────────────────────────────────────────────
+             LAYER 4: Menu dim overlay
+             ───────────────────────────────────────────────── -->
+        <Rectangle x:Name="MenuDimOverlay"
+                   Fill="Black"
+                   Opacity="0"
+                   IsHitTestVisible="False"
+                   MouseDown="MenuDimOverlay_MouseDown"/>
+
+        <!-- ─────────────────────────────────────────────────
+             LAYER 5: Sliding hamburger menu panel
+             ───────────────────────────────────────────────── -->
+        <Border x:Name="MenuPanel"
+                Width="320"
+                HorizontalAlignment="Left"
+                CornerRadius="0,0,0,0"
+                BorderThickness="0,0,1,0"
+                BorderBrush="#5FA572">
+            <Border.Background>
+                <SolidColorBrush Color="#0D2818" Opacity="0.95"/>
+            </Border.Background>
+            <Border.RenderTransform>
+                <TranslateTransform X="-320"/>
+            </Border.RenderTransform>
+            <Border.Effect>
+                <DropShadowEffect Color="#000000"
+                                  BlurRadius="30"
+                                  ShadowDepth="0"
+                                  Opacity="0.6"
+                                  Direction="0"/>
+            </Border.Effect>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Menu header: Brand + Close -->
+                <Grid Grid.Row="0" Margin="25,25,20,30">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Path Width="32" Height="32"
+                              Stroke="#5FA572"
+                              StrokeThickness="2.5"
+                              StrokeLineJoin="Round"
+                              Fill="Transparent"
+                              Stretch="Uniform"
+                              Data="M 50,5 C 20,15 5,40 10,75 C 40,75 75,55 80,15 C 70,12 60,10 50,5 Z M 18,68 C 35,55 55,40 65,20">
+                            <Path.Effect>
+                                <DropShadowEffect Color="#5FA572"
+                                                  BlurRadius="15"
+                                                  ShadowDepth="0"
+                                                  Opacity="0.7"/>
+                            </Path.Effect>
+                        </Path>
+                        <TextBlock Text="StandNatura"
+                                   FontSize="22"
+                                   FontWeight="SemiBold"
+                                   Foreground="#F5F0E8"
+                                   FontFamily="Trebuchet MS"
+                                   Margin="10,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Typography.Capitals="AllSmallCaps"/>
+                    </StackPanel>
+
+                    <!-- Close button -->
+                    <Button Grid.Column="1"
+                            Width="36" Height="36"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            VerticalAlignment="Center"
+                            Click="MenuToggleButton_Click">
+                        <Path Stroke="#F5F0E8"
+                              StrokeThickness="2"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"
+                              Data="M 6,6 L 18,18 M 18,6 L 6,18"/>
+                    </Button>
+                </Grid>
+
+                <!-- Menu items -->
+                <StackPanel Grid.Row="1" Margin="0,10,0,0">
+
+                    <!-- Welcome inside menu -->
+                    <StackPanel Margin="25,0,25,25">
+                        <TextBlock Text="WELCOME"
+                                   FontSize="10"
+                                   FontWeight="Bold"
+                                   Foreground="#9BB39E"
+                                   FontFamily="Trebuchet MS"/>
+                        <TextBlock Text="{Binding WelcomeMessage}"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="#F5F0E8"
+                                   FontFamily="Trebuchet MS"
+                                   Margin="0,3,0,0"/>
+                    </StackPanel>
+
+                    <!-- Divider -->
+                    <Border Height="1"
+                            Background="#5FA572"
+                            Opacity="0.25"
+                            Margin="25,0,25,15"/>
+
+                    <!-- Home (active — non-clickable) -->
+                    <Border Margin="0,2,0,2"
+                            Padding="0">
+                        <Border.Background>
+                            <SolidColorBrush Color="#5FA572" Opacity="0.15"/>
+                        </Border.Background>
+                        <Grid>
+                            <!-- Active accent (left bar) -->
+                            <Rectangle Width="3"
+                                       HorizontalAlignment="Left"
+                                       Fill="#5FA572"/>
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="25,12,25,12">
+                                <TextBlock Text="🏠"
+                                           FontSize="16"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,12,0"/>
+                                <TextBlock Text="Home"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="#F5F0E8"
+                                           FontFamily="Trebuchet MS"
+                                           VerticalAlignment="Center"/>
                             </StackPanel>
-                        </Border>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Grid>
+                        </Grid>
+                    </Border>
 
-        <!-- Right: Navigation Menu -->
-        <Grid Grid.Column="1" Background="#2D6A4F" Margin="0">
-            <StackPanel VerticalAlignment="Top" Margin="10,20,10,0">
+                    <!-- Submit Sighting -->
+                    <Button Style="{StaticResource MenuItemButton}"
+                            Click="MenuItem_Click"
+                            Command="{Binding GoToSubmitSightingCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📍"
+                                       FontSize="16"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+                            <TextBlock Text="Submit Sighting"
+                                       FontSize="14"
+                                       Foreground="#D8E5DA"
+                                       FontFamily="Trebuchet MS"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
-                <!-- Welcome -->
-                <TextBlock Text="{Binding WelcomeMessage}"
-                           FontSize="12" FontWeight="Bold"
-                           Foreground="#74C69D"
-                           FontFamily="Trebuchet MS"
-                           TextWrapping="Wrap"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,20"/>
+                    <!-- My Sightings -->
+                    <Button Style="{StaticResource MenuItemButton}"
+                            Click="MenuItem_Click"
+                            Command="{Binding GoToMySightingsCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🌿"
+                                       FontSize="16"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+                            <TextBlock Text="My Sightings"
+                                       FontSize="14"
+                                       Foreground="#D8E5DA"
+                                       FontFamily="Trebuchet MS"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
-                <Button Content="📍 Submit"
-                        Height="45"
-                        Margin="0,0,0,10"
-                        Background="#1B4332"
-                        Foreground="#D8F3DC"
-                        FontFamily="Trebuchet MS"
-                        FontSize="13" FontWeight="Bold"
-                        BorderBrush="#52B788" BorderThickness="2"
-                        Command="{Binding GoToSubmitSightingCommand}"/>
+                    <!-- Hotspot Map -->
+                    <Button Style="{StaticResource MenuItemButton}"
+                            Click="MenuItem_Click"
+                            Command="{Binding GoToHotspotMapCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🗺️"
+                                       FontSize="16"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+                            <TextBlock Text="Hotspot Map"
+                                       FontSize="14"
+                                       Foreground="#D8E5DA"
+                                       FontFamily="Trebuchet MS"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
-                <Button Content="🌿 My Sightings"
-                        Height="45"
-                        Margin="0,0,0,10"
-                        Background="#1B4332"
-                        Foreground="#D8F3DC"
-                        FontFamily="Trebuchet MS"
-                        FontSize="13" FontWeight="Bold"
-                        BorderBrush="#52B788" BorderThickness="2"
-                        Command="{Binding GoToMySightingsCommand}"/>
+                </StackPanel>
 
-                <Button Content="🗺️ Map"
-                        Height="45"
-                        Margin="0,0,0,10"
-                        Background="#1B4332"
-                        Foreground="#D8F3DC"
-                        FontFamily="Trebuchet MS"
-                        FontSize="13" FontWeight="Bold"
-                        BorderBrush="#52B788" BorderThickness="2"
-                        Command="{Binding GoToHotspotMapCommand}"/>
+                <!-- Logout (bottom) -->
+                <StackPanel Grid.Row="2" Margin="25,0,25,25">
+                    <Border Height="1"
+                            Background="#5FA572"
+                            Opacity="0.25"
+                            Margin="0,0,0,15"/>
+                    <Button Background="Transparent"
+                            BorderThickness="1"
+                            BorderBrush="#C45A3E"
+                            HorizontalContentAlignment="Center"
+                            Padding="0,10,0,10"
+                            Cursor="Hand"
+                            Click="MenuItem_Click"
+                            Command="{Binding LogoutCommand}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="4"/>
+                            </Style>
+                        </Button.Resources>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🚪"
+                                       FontSize="14"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0"/>
+                            <TextBlock Text="Logout"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="#C45A3E"
+                                       FontFamily="Trebuchet MS"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
 
-                <!-- Logout at bottom -->
-                <Button Content="🚪 Logout"
-                        Height="40"
-                        Margin="0,30,0,0"
-                        Background="#B7374A"
-                        Foreground="#FFFFFF"
-                        FontFamily="Trebuchet MS"
-                        FontSize="12" FontWeight="Bold"
-                        BorderBrush="#E05C6E" BorderThickness="2"
-                        Command="{Binding LogoutCommand}"/>
-            </StackPanel>
-        </Grid>
     </Grid>
 </UserControl>
