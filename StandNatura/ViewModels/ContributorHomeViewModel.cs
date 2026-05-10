@@ -23,13 +23,6 @@ namespace StandNatura.ViewModels
             set => SetProperty(ref _sightings, value);
         }
 
-        private SightingDisplay? _selectedSighting;
-        public SightingDisplay? SelectedSighting
-        {
-            get => _selectedSighting;
-            set => SetProperty(ref _selectedSighting, value);
-        }
-
         // ── COMMANDS ──────────────────────────────────────────
         public ICommand ViewSightingCommand { get; }
 
@@ -37,7 +30,7 @@ namespace StandNatura.ViewModels
         public ContributorHomeViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout)
             : base(navigate, currentUser, onLogout)
         {
-            ViewSightingCommand = new RelayCommand(ViewSighting, CanViewSighting);
+            ViewSightingCommand = new RelayCommand<SightingDisplay>(ViewSighting);
             LoadSightings();
         }
 
@@ -93,11 +86,10 @@ namespace StandNatura.ViewModels
         }
 
         // ── VIEW SIGHTING ─────────────────────────────────────
-        private void ViewSighting()
+        private void ViewSighting(SightingDisplay sighting)
         {
-            _navigate(new SightingDetailViewModel(_navigate, _currentUser, _onLogout, SelectedSighting!));
+            if (sighting == null) return;
+            _navigate(new SightingDetailViewModel(_navigate, _currentUser, _onLogout, sighting));
         }
-
-        private bool CanViewSighting() => SelectedSighting != null;
     }
 }

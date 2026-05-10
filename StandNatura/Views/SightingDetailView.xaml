@@ -3,373 +3,488 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:v="clr-namespace:StandNatura.Views"
              mc:Ignorable="d">
-    <Grid Background="#1B4332">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Grid Grid.Row="0" Margin="20,20,20,10">
-            <StackPanel>
-                <TextBlock Text="{Binding Sighting.Title}"
-                           FontSize="26" FontWeight="Bold"
-                           Foreground="#74C69D"
-                           FontFamily="Trebuchet MS"
-                           TextWrapping="Wrap"/>
-                <TextBlock FontSize="12"
-                           Foreground="#95D5B2"
-                           FontFamily="Trebuchet MS"
-                           Margin="0,4,0,0">
-                    <Run Text="By "/>
-                    <Run Text="{Binding Sighting.Username}" FontWeight="Bold"/>
-                    <Run Text=" · "/>
-                    <Run Text="{Binding Sighting.DatePosted}"/>
-                </TextBlock>
-            </StackPanel>
-        </Grid>
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
 
-        <!-- Main Content -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="20,0,20,10">
+        <Style x:Key="SectionCard" TargetType="Border">
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="22"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <SolidColorBrush Color="#1F4030" Opacity="0.85"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush">
+                <Setter.Value>
+                    <SolidColorBrush Color="#5FA572" Opacity="0.3"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-                <!-- Photo -->
-                <Border Height="350"
-                        Background="#2D6A4F"
-                        BorderBrush="#52B788"
-                        BorderThickness="2"
-                        Margin="0,0,0,15">
-                    <Grid>
-                        <TextBlock Text="🌿 No Photo Available"
-                                   Foreground="#95D5B2"
-                                   FontFamily="Trebuchet MS"
-                                   FontSize="14"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   Visibility="{Binding Sighting.Photo,
-                                       Converter={StaticResource NullToVisibilityConverter}}"/>
-                        <Image Source="{Binding Sighting.Photo, 
-                                Converter={StaticResource FilePathToImageConverter}}"
-                                Stretch="Uniform"
-                                Visibility="{Binding Sighting.Photo,
-                                Converter={StaticResource NotNullToVisibilityConverter}}"/>
-                    </Grid>
-                </Border>
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#9BB39E"/>
+            <Setter Property="FontFamily" Value="Trebuchet MS"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
 
-                <!-- Details -->
-                <Grid Margin="0,0,0,15">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#9BB39E"/>
+            <Setter Property="FontFamily" Value="Trebuchet MS"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
 
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Location"
-                                   FontSize="12" FontWeight="Bold"
-                                   Foreground="#95D5B2"
-                                   FontFamily="Trebuchet MS"/>
-                        <TextBlock Text="{Binding Sighting.Location}"
-                                   FontSize="13"
-                                   Foreground="#D8F3DC"
-                                   FontFamily="Trebuchet MS"/>
-                        <TextBlock FontSize="13"
-                                   Foreground="#D8F3DC"
-                                   FontFamily="Trebuchet MS">
-                            <Run Text="{Binding Sighting.Province}"/>
-                            <Run Text=", "/>
-                            <Run Text="{Binding Sighting.Region}"/>
-                        </TextBlock>
-                    </StackPanel>
+        <Style x:Key="InputBorder" TargetType="Border">
+            <Setter Property="Background" Value="#330D2818"/>
+            <Setter Property="BorderBrush" Value="#5FA572"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
 
-                    <StackPanel Grid.Column="1">
-                        <TextBlock Text="Coordinates"
-                                   FontSize="12" FontWeight="Bold"
-                                   Foreground="#95D5B2"
-                                   FontFamily="Trebuchet MS"/>
-                        <TextBlock FontSize="13"
-                                   Foreground="#D8F3DC"
-                                   FontFamily="Trebuchet MS">
-                            <Run Text="Lat: "/>
-                            <Run Text="{Binding Sighting.Latitude}"/>
-                        </TextBlock>
-                        <TextBlock FontSize="13"
-                                   Foreground="#D8F3DC"
-                                   FontFamily="Trebuchet MS">
-                            <Run Text="Long: "/>
-                            <Run Text="{Binding Sighting.Longitude}"/>
-                        </TextBlock>
-                    </StackPanel>
-                </Grid>
+        <Style x:Key="StyledTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#F5F0E8"/>
+            <Setter Property="CaretBrush" Value="#5FA572"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,10,12,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontFamily" Value="Trebuchet MS"/>
+        </Style>
 
-                <!-- Description -->
-                <TextBlock Text="About this Sighting"
-                           FontSize="14" FontWeight="Bold"
-                           Foreground="#95D5B2"
-                           FontFamily="Trebuchet MS"
-                           Margin="0,0,0,5"/>
-                <TextBlock Text="{Binding Sighting.Description}"
-                           FontSize="13"
-                           Foreground="#D8F3DC"
-                           FontFamily="Trebuchet MS"
-                           TextWrapping="Wrap"
-                           Margin="0,0,0,20"/>
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="Background" Value="#5FA572"/>
+            <Setter Property="Foreground" Value="#0D2818"/>
+            <Setter Property="FontFamily" Value="Trebuchet MS"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,0,16,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-                <!-- Petition Section -->
-                <Border Background="#2D6A4F"
-        BorderBrush="#52B788"
-        BorderThickness="2"
-        Padding="15"
-        Margin="0,0,0,15">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsAdmin}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+        <Style x:Key="OutlinedButton" TargetType="Button">
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#D8E5DA"/>
+            <Setter Property="FontFamily" Value="Trebuchet MS"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="#5FA572"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16,0,16,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Protection Demand"
-                       FontSize="14" FontWeight="Bold"
-                       Foreground="#74C69D"
-                       FontFamily="Trebuchet MS"/>
-                            <TextBlock FontSize="13"
-                       Foreground="#D8F3DC"
-                       FontFamily="Trebuchet MS">
-                <Run Text="{Binding DemandCount}"/>
-                <Run Text=" signatures demanding government protection"/>
+        <Style x:Key="DangerIconButton" TargetType="Button">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#E05C6E"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderBrush" Value="#C45A3E"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <v:AppShell ActivePageKey="{Binding ActivePageKey}">
+        <v:AppShell.PageContent>
+
+            <Grid Background="#0D2818">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="40,30,40,40" MaxWidth="1200" HorizontalAlignment="Stretch">
+
+                        <!-- Back link -->
+                        <Button Content="← Back"
+                                HorizontalAlignment="Left"
+                                Background="Transparent"
+                                Foreground="#9BB39E"
+                                FontFamily="Trebuchet MS"
+                                FontSize="13"
+                                FontWeight="SemiBold"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Padding="0"
+                                Margin="0,0,0,20"
+                                Command="{Binding GoBackCommand}"/>
+
+                        <!-- Title block -->
+                        <StackPanel Margin="0,0,0,24">
+                            <Border CornerRadius="12"
+                                    Padding="10,4,10,4"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,0,0,12">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#52B788"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Sighting.Status}" Value="Hidden">
+                                                <Setter Property="Background" Value="#9BB39E"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontSize="10"
+                                           FontWeight="Bold"
+                                           Foreground="#0D2818"
+                                           FontFamily="Trebuchet MS">
+                                    <Run Text="● "/>
+                                    <Run Text="{Binding Sighting.Status, Mode=OneWay}"/>
+                                </TextBlock>
+                            </Border>
+
+                            <TextBlock Text="{Binding Sighting.Title}"
+                                       FontSize="32"
+                                       FontWeight="SemiBold"
+                                       Foreground="#F5F0E8"
+                                       FontFamily="Trebuchet MS"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock FontSize="14"
+                                       Foreground="#D4A574"
+                                       FontFamily="Trebuchet MS"
+                                       Margin="0,6,0,0">
+                                <Run Text="By "/>
+                                <Run Text="{Binding Sighting.Username}" FontWeight="Bold"/>
+                                <Run Text="  •  "/>
+                                <Run Text="{Binding Sighting.DatePosted}" Foreground="#9BB39E"/>
                             </TextBlock>
                         </StackPanel>
 
-                        <Button Grid.Column="1"
-                Content="{Binding PetitionButtonText}"
-                Height="40" Width="150"
-                Background="#52B788"
-                Foreground="#1B4332"
-                FontFamily="Trebuchet MS"
-                FontSize="12" FontWeight="Bold"
-                BorderBrush="#74C69D" BorderThickness="2"
-                Command="{Binding SignPetitionCommand}"/>
-                    </Grid>
-                </Border>
-
-                <!-- Donation Section -->
-                <Border Background="#2D6A4F"
-                        BorderBrush="#52B788"
-                        BorderThickness="2"
-                        Padding="15"
-                        Margin="0,0,0,15">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsAdmin}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <StackPanel>
-                        <TextBlock Text="💰 Support This Sanctuary"
-                                   FontSize="14" FontWeight="Bold"
-                                   Foreground="#74C69D"
-                                   FontFamily="Trebuchet MS"
-                                   Margin="0,0,0,5"/>
-                        <TextBlock FontSize="13"
-                                   Foreground="#D8F3DC"
-                                   FontFamily="Trebuchet MS"
-                                   Margin="0,0,0,10">
-                            <Run Text="Total Funds Raised: "/>
-                            <Run Text="{Binding TotalFunds, StringFormat='₱{0:N2}'}"
-                                 FontWeight="Bold" Foreground="#74C69D"/>
-                        </TextBlock>
-                        <TextBlock Text="Donate to unlock commenting on this sighting."
-                                   FontSize="12"
-                                   Foreground="#95D5B2"
-                                   FontFamily="Trebuchet MS"
-                                   Margin="0,0,0,10"/>
+                        <!-- Two-pane content -->
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="3*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="2*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0"
-                                     Background="#1B4332"
-                                     Foreground="#FFFFFF"
-                                     BorderBrush="#52B788"
-                                     BorderThickness="2"
-                                     Padding="5,8,5,8"
-                                     FontSize="13"
-                                     FontFamily="Trebuchet MS"
-                                     Margin="0,0,10,0"
-                                     Text="{Binding DonationAmount, UpdateSourceTrigger=PropertyChanged}"/>
-                            <Button Grid.Column="1"
-                                    Content="₱ Donate"
-                                    Height="38" Width="100"
-                                    Background="#52B788"
-                                    Foreground="#1B4332"
-                                    FontFamily="Trebuchet MS"
-                                    FontSize="13" FontWeight="Bold"
-                                    BorderBrush="#74C69D" BorderThickness="2"
-                                    Command="{Binding DonateCommand}"/>
-                        </Grid>
-                    </StackPanel>
-                </Border>
 
-                <!-- Comments Section -->
-                <TextBlock Text="💬 Comments"
-                           FontSize="14" FontWeight="Bold"
-                           Foreground="#74C69D"
-                           FontFamily="Trebuchet MS"
-                           Margin="0,0,0,10"/>
+                            <!-- LEFT PANE -->
+                            <StackPanel Grid.Column="0">
 
-                <!-- Comment Input -->
-                <Border Background="#2D6A4F"
-                        BorderBrush="#52B788"
-                        BorderThickness="2"
-                        Padding="15"
-                        Margin="0,0,0,10">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsAdmin}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <StackPanel>
-                        <TextBlock FontSize="12"
-                                   Foreground="#95D5B2"
-                                   FontFamily="Trebuchet MS"
-                                   Margin="0,0,0,8"
-                                   Visibility="{Binding CanComment,
-                                       Converter={StaticResource NotNullToVisibilityConverter}}">
-                            <Run Text="You have donated to this sanctuary. Leave a comment below!"/>
-                        </TextBlock>
-                        <TextBlock Text="You must donate first to leave a comment."
-                                   FontSize="12"
-                                   Foreground="#E05C6E"
-                                   FontFamily="Trebuchet MS"
-                                   Margin="0,0,0,8"
-                                   Visibility="{Binding CanComment,
-                                       Converter={StaticResource NullToVisibilityConverter}}"/>
-                        <TextBox Background="#1B4332"
-                                 Foreground="#FFFFFF"
-                                 BorderBrush="#52B788"
-                                 BorderThickness="2"
-                                 Padding="5,8,5,8"
-                                 FontSize="13"
-                                 FontFamily="Trebuchet MS"
-                                 Height="60"
-                                 TextWrapping="Wrap"
-                                 AcceptsReturn="True"
-                                 IsEnabled="{Binding CanComment}"
-                                 Text="{Binding CommentText, UpdateSourceTrigger=PropertyChanged}"/>
-                        <Button Content="Post Comment"
-                                Height="38"
-                                Margin="0,10,0,0"
-                                Background="#52B788"
-                                Foreground="#1B4332"
-                                FontFamily="Trebuchet MS"
-                                FontSize="13" FontWeight="Bold"
-                                BorderBrush="#74C69D" BorderThickness="2"
-                                IsEnabled="{Binding CanComment}"
-                                Command="{Binding PostCommentCommand}"/>
-                    </StackPanel>
-                </Border>
+                                <!-- Photo -->
+                                <Border Style="{StaticResource SectionCard}" Padding="0" ClipToBounds="True">
+                                    <Border Height="350" Background="#0D2818">
+                                        <Grid>
+                                            <TextBlock Text="🌿 No Photo Available"
+                                                       Foreground="#9BB39E"
+                                                       FontFamily="Trebuchet MS"
+                                                       FontSize="14"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       Visibility="{Binding Sighting.Photo, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                            <Image Source="{Binding Sighting.Photo, Converter={StaticResource FilePathToImageConverter}}"
+                                                   Stretch="Uniform"
+                                                   Visibility="{Binding Sighting.Photo, Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                                        </Grid>
+                                    </Border>
+                                </Border>
 
-                <!-- Comments List -->
-                <ItemsControl ItemsSource="{Binding Comments}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#2D6A4F"
-                    BorderBrush="#52B788"
-                    BorderThickness="2"
-                    Padding="12"
-                    Margin="0,0,0,8">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock FontSize="13" FontWeight="Bold"
-                                   Foreground="#74C69D"
-                                   FontFamily="Trebuchet MS">
-                            <Run Text="{Binding DonorUsername}"/>
-                            <Run Text=" · "/>
-                            <Run Text="{Binding Amount, StringFormat='₱{0:N2}'}"
-                                 Foreground="#52B788"/>
-                                        </TextBlock>
-                                        <TextBlock Text="{Binding CommentText}"
-                                   FontSize="13"
-                                   Foreground="#D8F3DC"
-                                   FontFamily="Trebuchet MS"
-                                   TextWrapping="Wrap"
-                                   Margin="0,5,0,0"/>
+                                <!-- Description -->
+                                <Border Style="{StaticResource SectionCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="DESCRIPTION" Style="{StaticResource SectionHeader}"/>
+                                        <Border Height="1" Background="#5FA572" Opacity="0.3" Margin="0,0,0,16"/>
+                                        <TextBlock Text="{Binding Sighting.Description}"
+                                                   FontSize="14"
+                                                   Foreground="#F5F0E8"
+                                                   FontFamily="Trebuchet MS"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="22"/>
                                     </StackPanel>
+                                </Border>
 
-                                    <!-- Delete button (admin only) -->
-                                    <Button Grid.Column="1"
-                            Content="🗑️"
-                            Width="35" Height="35"
-                            VerticalAlignment="Top"
-                            Margin="10,0,0,0"
-                            Background="#B7374A"
-                            Foreground="#FFFFFF"
-                            FontFamily="Trebuchet MS"
-                            FontSize="14" FontWeight="Bold"
-                            BorderBrush="#E05C6E" BorderThickness="2"
-                            ToolTip="Delete this comment"
-                            Command="{Binding DataContext.DeleteCommentCommand,
-                                RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                            CommandParameter="{Binding}">
-                                        <Button.Style>
-                                            <Style TargetType="Button">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding DataContext.IsAdmin,
-                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}" Value="True">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
-                                    </Button>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                                <!-- Location -->
+                                <Border Style="{StaticResource SectionCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="LOCATION" Style="{StaticResource SectionHeader}"/>
+                                        <Border Height="1" Background="#5FA572" Opacity="0.3" Margin="0,0,0,16"/>
 
-            </StackPanel>
-        </ScrollViewer>
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="📍 BARANGAY"/>
+                                        <TextBlock Text="{Binding Sighting.Location}"
+                                                   FontSize="14"
+                                                   Foreground="#F5F0E8"
+                                                   FontFamily="Trebuchet MS"
+                                                   Margin="0,0,0,14"/>
 
-        <!-- Back Button -->
-        <Grid Grid.Row="2" Margin="20,10,20,20">
-            <Button Content="← Back to Feed"
-                    Height="45"
-                    HorizontalAlignment="Left"
-                    Width="200"
-                    Background="#2D6A4F"
-                    Foreground="#D8F3DC"
-                    FontFamily="Trebuchet MS"
-                    FontSize="14" FontWeight="Bold"
-                    BorderBrush="#52B788" BorderThickness="2"
-                    Command="{Binding GoBackCommand}"/>
-        </Grid>
-    </Grid>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition Width="14"/>
+                                                <ColumnDefinition/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Style="{StaticResource FieldLabel}" Text="PROVINCE"/>
+                                                <TextBlock Text="{Binding Sighting.Province}"
+                                                           FontSize="14"
+                                                           Foreground="#F5F0E8"
+                                                           FontFamily="Trebuchet MS"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Style="{StaticResource FieldLabel}" Text="REGION"/>
+                                                <TextBlock Text="{Binding Sighting.Region}"
+                                                           FontSize="14"
+                                                           Foreground="#F5F0E8"
+                                                           FontFamily="Trebuchet MS"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Grid Margin="0,14,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition Width="14"/>
+                                                <ColumnDefinition/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Style="{StaticResource FieldLabel}" Text="LATITUDE"/>
+                                                <TextBlock Text="{Binding Sighting.Latitude}"
+                                                           FontSize="13"
+                                                           Foreground="#D4A574"
+                                                           FontFamily="Consolas"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Style="{StaticResource FieldLabel}" Text="LONGITUDE"/>
+                                                <TextBlock Text="{Binding Sighting.Longitude}"
+                                                           FontSize="13"
+                                                           Foreground="#D4A574"
+                                                           FontFamily="Consolas"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                            </StackPanel>
+
+                            <!-- RIGHT PANE -->
+                            <StackPanel Grid.Column="2">
+
+                                <!-- Petition (contributor only) -->
+                                <Border Style="{StaticResource SectionCard}"
+                                        Visibility="{Binding IsContributor, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel>
+                                        <TextBlock Text="🛡️ PROTECT THIS SANCTUARY" Style="{StaticResource SectionHeader}"/>
+                                        <Border Height="1" Background="#5FA572" Opacity="0.3" Margin="0,0,0,16"/>
+
+                                        <TextBlock Text="Sign the petition to support protection efforts"
+                                                   FontSize="13"
+                                                   Foreground="#9BB39E"
+                                                   FontFamily="Trebuchet MS"
+                                                   FontStyle="Italic"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,0,14"/>
+
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="SIGNATURES"/>
+                                        <TextBlock FontSize="28"
+                                                   FontWeight="Bold"
+                                                   Foreground="#5FA572"
+                                                   FontFamily="Trebuchet MS"
+                                                   Margin="0,0,0,14">
+                                            <Run Text="{Binding DemandCount, Mode=OneWay}"/>
+                                        </TextBlock>
+
+                                        <Button Content="{Binding PetitionButtonText}"
+                                                    Style="{StaticResource PrimaryButton}"
+                                                    Command="{Binding SignPetitionCommand}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Donation (contributor only) -->
+                                <Border Style="{StaticResource SectionCard}"
+                                        Visibility="{Binding IsContributor, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel>
+                                        <TextBlock Text="💚 DONATE TO PROTECT" Style="{StaticResource SectionHeader}"/>
+                                        <Border Height="1" Background="#5FA572" Opacity="0.3" Margin="0,0,0,16"/>
+
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="TOTAL RAISED"/>
+                                        <TextBlock FontSize="28"
+                                                   FontWeight="Bold"
+                                                   Foreground="#D4A574"
+                                                   FontFamily="Trebuchet MS"
+                                                   Margin="0,0,0,16">
+                                            <Run Text="₱"/>
+                                            <Run Text="{Binding TotalFunds, Mode=OneWay}"/>
+                                        </TextBlock>
+
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="AMOUNT (₱)"/>
+                                        <Border Style="{StaticResource InputBorder}" Margin="0,0,0,12">
+                                            <TextBox Style="{StaticResource StyledTextBox}"
+                                                     Text="{Binding DonationAmount, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </Border>
+
+                                        <Button Content="💰 Donate Now"
+                                                Style="{StaticResource PrimaryButton}"
+                                                Command="{Binding DonateCommand}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Admin Moderation (admin only) -->
+                                <Border Style="{StaticResource SectionCard}"
+                                        Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel>
+                                        <TextBlock Text="🛡️ MODERATION" Style="{StaticResource SectionHeader}"/>
+                                        <Border Height="1" Background="#5FA572" Opacity="0.3" Margin="0,0,0,16"/>
+
+                                        <TextBlock Text="Hide this sighting from the public feed for further review."
+                                                   FontSize="13"
+                                                   Foreground="#9BB39E"
+                                                   FontFamily="Trebuchet MS"
+                                                   FontStyle="Italic"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,0,14"/>
+
+                                        <Button Content="👁️ Hide for Review"
+                                                Style="{StaticResource OutlinedButton}"
+                                                Command="{Binding HideForReviewCommand}"/>
+                                    </StackPanel>
+                                </Border>
+
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Comments full-width below -->
+                        <Border Style="{StaticResource SectionCard}">
+                            <StackPanel>
+                                <TextBlock Text="💬 COMMUNITY COMMENTS" Style="{StaticResource SectionHeader}"/>
+                                <Border Height="1" Background="#5FA572" Opacity="0.3" Margin="0,0,0,16"/>
+
+                                <!-- Comment input (contributor only, only when allowed) -->
+                                <StackPanel Visibility="{Binding CanComment, Converter={StaticResource BoolToVisibility}}"
+                                            Margin="0,0,0,16">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="ADD A COMMENT"/>
+                                    <Border Style="{StaticResource InputBorder}" Margin="0,0,0,12">
+                                        <TextBox Style="{StaticResource StyledTextBox}"
+                                                 Height="80"
+                                                 TextWrapping="Wrap"
+                                                 AcceptsReturn="True"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 Text="{Binding CommentText, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </Border>
+                                    <Button Content="Post Comment"
+                                            Style="{StaticResource PrimaryButton}"
+                                            HorizontalAlignment="Left"
+                                            Width="180"
+                                            Command="{Binding PostCommentCommand}"/>
+                                </StackPanel>
+
+                                <!-- Comments list -->
+                                <ItemsControl ItemsSource="{Binding Comments}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="#5FA572"
+                                                    BorderThickness="0,0,0,1"
+                                                    Padding="0,14,0,14">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock FontSize="13"
+                                                                   FontFamily="Trebuchet MS">
+                                                           <Run Text="{Binding DonorUsername}"
+                                                                FontWeight="Bold"
+                                                                Foreground="#D4A574"/>
+                                                           <Run Text="  donated  "
+                                                                Foreground="#9BB39E"/>
+                                                           <Run Text="₱"
+                                                                Foreground="#5FA572"
+                                                                FontWeight="Bold"/>
+                                                            <Run Text="{Binding Amount}"
+                                                                Foreground="#5FA572"
+                                                                FontWeight="Bold"/>
+                                                        </TextBlock>
+                                                        <TextBlock Text="{Binding CommentText}"
+                                                                   FontSize="13"
+                                                                   Foreground="#F5F0E8"
+                                                                   FontFamily="Trebuchet MS"
+                                                                   TextWrapping="Wrap"
+                                                                   Margin="0,6,0,0"/>
+                                                    </StackPanel>
+
+                                                    <Button Grid.Column="1"
+                                                            Content="🗑️"
+                                                            Style="{StaticResource DangerIconButton}"
+                                                            Margin="12,0,0,0"
+                                                            VerticalAlignment="Top"
+                                                            Visibility="{Binding DataContext.IsAdmin,
+                                                                RelativeSource={RelativeSource AncestorType=ItemsControl},
+                                                                Converter={StaticResource BoolToVisibility}}"
+                                                            Command="{Binding DataContext.DeleteCommentCommand,
+                                                                RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- Empty comments state -->
+                                <TextBlock Text="No comments yet. Be the first to support this sanctuary!"
+                                           FontSize="13"
+                                           Foreground="#9BB39E"
+                                           FontFamily="Trebuchet MS"
+                                           FontStyle="Italic"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,20,0,0"
+                                           Visibility="{Binding HasNoComments, Converter={StaticResource BoolToVisibility}}"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+        </v:AppShell.PageContent>
+    </v:AppShell>
 </UserControl>

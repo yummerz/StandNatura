@@ -17,11 +17,9 @@ namespace StandNatura.ViewModels
 
     }
 
-    public class SightingDetailViewModel : BaseViewModel
+    public class SightingDetailViewModel : ContributorBaseViewModel
     {
-        private readonly Action<BaseViewModel> _navigate;
-        private readonly User _currentUser;
-        private readonly Action _onLogout;
+        public override string ActivePageKey => string.Empty;
         private static readonly string connectionString = DatabaseConfig.ConnectionString;
         // ── ADMIN MODE ────────────────────────────────────────
         public bool IsAdmin => _currentUser.Role == "Admin";
@@ -67,6 +65,7 @@ namespace StandNatura.ViewModels
             get => _totalFunds;
             set => SetProperty(ref _totalFunds, value);
         }
+        public bool HasNoComments => Comments == null || Comments.Count == 0;
 
         // ── COMMENT ───────────────────────────────────────────
         private string _commentText = string.Empty;
@@ -99,10 +98,8 @@ namespace StandNatura.ViewModels
 
         // ── CONSTRUCTOR ───────────────────────────────────────
         public SightingDetailViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout, SightingDisplay sighting)
+            : base(navigate, currentUser, onLogout)
         {
-            _navigate = navigate;
-            _currentUser = currentUser;
-            _onLogout = onLogout;
             Sighting = sighting;
 
             GoBackCommand = new RelayCommand(GoBack);
@@ -381,6 +378,7 @@ namespace StandNatura.ViewModels
             {
                 MessageBox.Show("Failed to load comments: " + ex.Message);
             }
+            OnPropertyChanged(nameof(HasNoComments));
         }
 
         // ── POST COMMENT ──────────────────────────────────────
@@ -427,6 +425,7 @@ namespace StandNatura.ViewModels
             {
                 MessageBox.Show("Failed to post comment: " + ex.Message);
             }
+            OnPropertyChanged(nameof(HasNoComments));
         }
         // ── DELETE COMMENT (Admin only) ───────────────────────
         private void DeleteComment(CommentDisplay comment)
@@ -462,6 +461,7 @@ namespace StandNatura.ViewModels
             {
                 MessageBox.Show("Failed to delete comment: " + ex.Message);
             }
+            OnPropertyChanged(nameof(HasNoComments));
         }
 
         private bool CanDeleteComment(CommentDisplay comment) => IsAdmin && comment != null;
