@@ -5,18 +5,18 @@ using System.Windows.Input;
 
 namespace StandNatura.ViewModels
 {
-    public class HotspotMapViewModel : BaseViewModel
+    public class HotspotMapViewModel : ContributorBaseViewModel
     {
-        private readonly Action<BaseViewModel> _navigate;
-        private readonly User _currentUser;
-        private readonly Action _onLogout;
+        // ── ACTIVE PAGE KEY ───────────────────────────────────
+        public override string ActivePageKey => "HotspotMap";
+
+        // ── COMMANDS ──────────────────────────────────────────
         public ICommand GoBackCommand { get; }
 
+        // ── CONSTRUCTOR ───────────────────────────────────────
         public HotspotMapViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout)
+            : base(navigate, currentUser, onLogout)
         {
-            _navigate = navigate;
-            _currentUser = currentUser;
-            _onLogout = onLogout;
             GoBackCommand = new RelayCommand(() => _navigate(new ContributorHomeViewModel(_navigate, _currentUser, _onLogout)));
         }
     }

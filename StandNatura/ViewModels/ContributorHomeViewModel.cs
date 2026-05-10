@@ -8,16 +8,14 @@ using Microsoft.Data.SqlClient;
 
 namespace StandNatura.ViewModels
 {
-    public class ContributorHomeViewModel : BaseViewModel
+    public class ContributorHomeViewModel : ContributorBaseViewModel
     {
-        private readonly Action<BaseViewModel> _navigate;
-        private readonly User _currentUser;
-        private readonly Action _onLogout;
         private static readonly string connectionString = DatabaseConfig.ConnectionString;
 
-        // ── BINDABLE PROPERTIES ──────────────────────────────
-        public string WelcomeMessage => _currentUser.Username;
+        // ── ACTIVE PAGE KEY ───────────────────────────────────
+        public override string ActivePageKey => "Home";
 
+        // ── BINDABLE PROPERTIES ──────────────────────────────
         private ObservableCollection<SightingDisplay> _sightings = new();
         public ObservableCollection<SightingDisplay> Sightings
         {
@@ -33,25 +31,13 @@ namespace StandNatura.ViewModels
         }
 
         // ── COMMANDS ──────────────────────────────────────────
-        public ICommand GoToSubmitSightingCommand { get; }
-        public ICommand GoToMySightingsCommand { get; }
-        public ICommand GoToHotspotMapCommand { get; }
-        public ICommand LogoutCommand { get; }
         public ICommand ViewSightingCommand { get; }
 
         // ── CONSTRUCTOR ───────────────────────────────────────
         public ContributorHomeViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout)
+            : base(navigate, currentUser, onLogout)
         {
-            _navigate = navigate;
-            _currentUser = currentUser;
-            _onLogout = onLogout;
-
-            GoToSubmitSightingCommand = new RelayCommand(() => _navigate(new SubmitSightingViewModel(_navigate, _currentUser, _onLogout)));
-            GoToMySightingsCommand = new RelayCommand(() => _navigate(new MySightingsViewModel(_navigate, _currentUser, _onLogout)));
-            GoToHotspotMapCommand = new RelayCommand(() => _navigate(new HotspotMapViewModel(_navigate, _currentUser, _onLogout)));
-            LogoutCommand = new RelayCommand(Logout);
             ViewSightingCommand = new RelayCommand(ViewSighting, CanViewSighting);
-
             LoadSightings();
         }
 
@@ -113,18 +99,5 @@ namespace StandNatura.ViewModels
         }
 
         private bool CanViewSighting() => SelectedSighting != null;
-
-        // ── LOGOUT ────────────────────────────────────────────
-        private void Logout()
-        {
-            var result = MessageBox.Show(
-                "Are you sure you want to logout?",
-                "Confirm Logout",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
-                _onLogout();
-        }
     }
 }

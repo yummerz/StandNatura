@@ -8,13 +8,13 @@ using Microsoft.Win32;
 
 namespace StandNatura.ViewModels
 {
-    public class SubmitSightingViewModel : BaseViewModel
+    public class SubmitSightingViewModel : ContributorBaseViewModel
     {
-        private readonly Action<BaseViewModel> _navigate;
-        private readonly User _currentUser;
-        private readonly Action _onLogout;
         private static readonly string connectionString = DatabaseConfig.ConnectionString;
         private readonly int? _editingSightingId;
+
+        // ── ACTIVE PAGE KEY ───────────────────────────────────
+        public override string ActivePageKey => "Submit";
 
         // ── BINDABLE PROPERTIES ──────────────────────────────
         private string _title = string.Empty;
@@ -79,31 +79,28 @@ namespace StandNatura.ViewModels
             : "📍 Submit Sighting";
 
         public string HeaderText => _editingSightingId.HasValue
-            ? "📝 Edit & Resubmit"
-            : "📍 Submit a Sighting";
+            ? "Edit & Resubmit"
+            : "Submit a Sighting";
 
         public string SubHeaderText => _editingSightingId.HasValue
             ? "Make any edits and resubmit for admin review."
-            : "Log a new sanctuary sighting for admin review.";
+            : "Help us protect what you've discovered. Submissions are reviewed by an admin before going live in the community feed.";
 
         // ── COMMANDS ──────────────────────────────────────────
-        public ICommand GoBackCommand { get; }
+        public ICommand CancelCommand { get; }
         public ICommand BrowsePhotoCommand { get; }
         public ICommand SubmitSightingCommand { get; }
 
-        // ── CONSTRUCTOR ───────────────────────────────────────
+        // ── CONSTRUCTOR (new submission) ──────────────────────
         public SubmitSightingViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout)
+            : base(navigate, currentUser, onLogout)
         {
-            _navigate = navigate;
-            _currentUser = currentUser;
-            _onLogout = onLogout;
-
-            GoBackCommand = new RelayCommand(() => _navigate(new ContributorHomeViewModel(_navigate, _currentUser, _onLogout)));
+            CancelCommand = new RelayCommand(() => _navigate(new ContributorHomeViewModel(_navigate, _currentUser, _onLogout)));
             BrowsePhotoCommand = new RelayCommand(BrowsePhoto);
             SubmitSightingCommand = new RelayCommand(SubmitSighting, CanSubmit);
         }
 
-        // New constructor for editing/resubmitting
+        // ── CONSTRUCTOR (edit/resubmit existing sighting) ─────
         public SubmitSightingViewModel(Action<BaseViewModel> navigate, User currentUser, Action onLogout, SightingDisplay existingSighting)
             : this(navigate, currentUser, onLogout)
         {
@@ -165,6 +162,7 @@ namespace StandNatura.ViewModels
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
             try
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
@@ -173,29 +171,27 @@ namespace StandNatura.ViewModels
 
                     if (_editingSightingId.HasValue)
                     {
-                        // Edit/Resubmit mode — UPDATE existing row, reset status
                         query = @"UPDATE Sighting SET 
-                                Title = @title,
-                                Description = @description,
-                                Photo = @photo,
-                                Location = @location,
-                                Province = @province,
-                                Region = @region,
-                                Longitude = @longitude,
-                                Latitude = @latitude,
-                                Status = 'Pending',
-                                DenialReason = NULL,
-                                ArchiveReason = NULL,
-                                DatePosted = GETDATE()
-                                WHERE SightingId = @sightingId";
+                            Title = @title,
+                            Description = @description,
+                            Photo = @photo,
+                            Location = @location,
+                            Province = @province,
+                            Region = @region,
+                            Longitude = @longitude,
+                            Latitude = @latitude,
+                            Status = 'Pending',
+                            DenialReason = NULL,
+                            ArchiveReason = NULL,
+                            DatePosted = GETDATE()
+                          WHERE SightingId = @sightingId";
                     }
                     else
                     {
-                        // New submission — INSERT
                         query = @"INSERT INTO Sighting 
-                    (UserId, Title, Description, DatePosted, Photo, Location, Province, Region, Longitude, Latitude, Status)
-                    VALUES 
-                    (@userId, @title, @description, GETDATE(), @photo, @location, @province, @region, @longitude, @latitude, 'Pending')";
+                            (UserId, Title, Description, DatePosted, Photo, Location, Province, Region, Longitude, Latitude, Status)
+                            VALUES 
+                            (@userId, @title, @description, GETDATE(), @photo, @location, @province, @region, @longitude, @latitude, 'Pending')";
                     }
 
                     using (SqlCommand command = new SqlCommand(query, connection))
@@ -225,7 +221,6 @@ namespace StandNatura.ViewModels
                 MessageBox.Show(successMessage, "Success",
                     MessageBoxButton.OK, MessageBoxImage.Information);
 
-                // After resubmit, navigate back to MySightings; otherwise just clear form
                 if (_editingSightingId.HasValue)
                     _navigate(new MySightingsViewModel(_navigate, _currentUser, _onLogout));
                 else
@@ -252,13 +247,13 @@ namespace StandNatura.ViewModels
 
         // ── CAN EXECUTE ───────────────────────────────────────
         private bool CanSubmit() =>
-                !string.IsNullOrWhiteSpace(Title) &&
-                !string.IsNullOrWhiteSpace(Description) &&
-                !string.IsNullOrWhiteSpace(Location) &&
-                !string.IsNullOrWhiteSpace(Province) &&
-                !string.IsNullOrWhiteSpace(Region) &&
-                !string.IsNullOrWhiteSpace(Longitude) &&
-                !string.IsNullOrWhiteSpace(Latitude) &&
-                !string.IsNullOrWhiteSpace(PhotoPath);
+            !string.IsNullOrWhiteSpace(Title) &&
+            !string.IsNullOrWhiteSpace(Description) &&
+            !string.IsNullOrWhiteSpace(Location) &&
+            !string.IsNullOrWhiteSpace(Province) &&
+            !string.IsNullOrWhiteSpace(Region) &&
+            !string.IsNullOrWhiteSpace(Longitude) &&
+            !string.IsNullOrWhiteSpace(Latitude) &&
+            !string.IsNullOrWhiteSpace(PhotoPath);
     }
 }

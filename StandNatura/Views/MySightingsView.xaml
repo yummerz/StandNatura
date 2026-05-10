@@ -3,391 +3,686 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:v="clr-namespace:StandNatura.Views"
              mc:Ignorable="d">
-    <Grid Background="#1B4332">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="20,20,20,10">
-            <TextBlock Text="🌿 My Sightings"
-                       FontSize="28" FontWeight="Bold"
-                       Foreground="#74C69D"
-                       FontFamily="Trebuchet MS"/>
-            <TextBlock Text="View and manage all your submitted sightings."
-                       FontSize="13"
-                       Foreground="#95D5B2"
-                       FontFamily="Trebuchet MS"
-                       Margin="0,4,0,0"/>
-        </StackPanel>
+    <!-- ============================================================
+         MY SIGHTINGS VIEW
+         Status-grouped card stream. Each section renders only if
+         it has items (binding IsVisible to the Has* properties).
+         Each card has inline actions appropriate to its status.
+         ============================================================ -->
 
-        <!-- Main Content -->
-        <Grid Grid.Row="1" Margin="20,10,20,10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="3*"/>
-            </Grid.ColumnDefinitions>
+    <UserControl.Resources>
 
-            <!-- Left: My Sightings List -->
-            <Grid Grid.Column="0" Margin="0,0,10,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+        <!-- Bool → Visibility converter (need to register this) -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
 
-                <TextBlock Grid.Row="0"
-                           Text="My Submissions"
-                           FontSize="15" FontWeight="Bold"
-                           Foreground="#D8F3DC"
-                           FontFamily="Trebuchet MS"
-                           Margin="0,0,0,8"/>
+        <!-- Card container style -->
+        <Style x:Key="SightingCard" TargetType="Border">
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <SolidColorBrush Color="#1F4030" Opacity="0.85"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush">
+                <Setter.Value>
+                    <SolidColorBrush Color="#5FA572" Opacity="0.3"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-                <ListBox Grid.Row="1"
-                         ItemsSource="{Binding MySightings}"
-                         SelectedItem="{Binding SelectedSighting}"
-                         Background="#2D6A4F"
-                         Foreground="#D8F3DC"
-                         BorderBrush="#52B788"
-                         BorderThickness="2">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="8,6,8,6">
-                                <TextBlock Text="{Binding Title}"
-                                           FontSize="14" FontWeight="Bold"
-                                           Foreground="#D8F3DC"
+        <!-- Status pill base style -->
+        <Style x:Key="StatusPill" TargetType="Border">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="10,4,10,4"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Section header style -->
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#9BB39E"/>
+            <Setter Property="FontFamily" Value="Trebuchet MS"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+
+        <!-- Primary action button (filled green) -->
+        <Style x:Key="PrimaryActionButton" TargetType="Button">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Background" Value="#5FA572"/>
+            <Setter Property="Foreground" Value="#0D2818"/>
+            <Setter Property="FontFamily" Value="Trebuchet MS"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="14,0,14,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Resources">
+                <Setter.Value>
+                    <ResourceDictionary>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="4"/>
+                        </Style>
+                    </ResourceDictionary>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Secondary action button (outlined) -->
+        <Style x:Key="SecondaryActionButton" TargetType="Button">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#D8E5DA"/>
+            <Setter Property="FontFamily" Value="Trebuchet MS"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="#5FA572"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="14,0,14,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Resources">
+                <Setter.Value>
+                    <ResourceDictionary>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="4"/>
+                        </Style>
+                    </ResourceDictionary>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Danger button (outlined red, for destructive actions) -->
+        <Style x:Key="DangerActionButton" TargetType="Button">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#E05C6E"/>
+            <Setter Property="FontFamily" Value="Trebuchet MS"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="#C45A3E"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="14,0,14,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Resources">
+                <Setter.Value>
+                    <ResourceDictionary>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="4"/>
+                        </Style>
+                    </ResourceDictionary>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </UserControl.Resources>
+
+    <v:AppShell ActivePageKey="{Binding ActivePageKey}">
+        <v:AppShell.PageContent>
+
+            <Grid Background="#0D2818">
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <Grid Margin="40,30,40,40" MaxWidth="1100" HorizontalAlignment="Stretch">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- ─────────────────────────────────
+                             ROW 0: Page heading
+                             ───────────────────────────────── -->
+                        <StackPanel Grid.Row="0" Margin="0,0,0,30">
+                            <TextBlock Text="🌿 My Sightings"
+                                       FontSize="32"
+                                       FontWeight="SemiBold"
+                                       Foreground="#F5F0E8"
+                                       FontFamily="Trebuchet MS"/>
+                            <TextBlock Text="Manage your submissions and resubmit denied ones"
+                                       FontSize="14"
+                                       Foreground="#9BB39E"
+                                       FontFamily="Trebuchet MS"
+                                       FontStyle="Italic"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <!-- ─────────────────────────────────
+                             ROW 1: Content (sections OR empty state)
+                             ───────────────────────────────── -->
+                        <Grid Grid.Row="1">
+
+                            <!-- ════════ EMPTY STATE ════════ -->
+                            <StackPanel HorizontalAlignment="Center"
+                                        VerticalAlignment="Top"
+                                        Margin="0,60,0,0"
+                                        Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="🌱"
+                                           FontSize="72"
+                                           HorizontalAlignment="Center"
+                                           Opacity="0.6"/>
+                                <TextBlock Text="No sightings yet"
+                                           FontSize="22"
+                                           FontWeight="SemiBold"
+                                           Foreground="#F5F0E8"
                                            FontFamily="Trebuchet MS"
-                                           TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding DatePosted}"
-                                           FontSize="11"
-                                           Foreground="#95D5B2"
-                                           FontFamily="Trebuchet MS"/>
-                                <!-- Status Badge -->
-                                <TextBlock FontSize="12" FontWeight="Bold"
-                                           FontFamily="Trebuchet MS">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Text" Value="{Binding Status}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Status}" Value="Pending">
-                                                    <Setter Property="Foreground" Value="#FFD700"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Status}" Value="Approved">
-                                                    <Setter Property="Foreground" Value="#52B788"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Status}" Value="Denied">
-                                                    <Setter Property="Foreground" Value="#E05C6E"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Status}" Value="Archived">
-                                                    <Setter Property="Foreground" Value="#9D4DCC"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
+                                           HorizontalAlignment="Center"
+                                           Margin="0,16,0,0"/>
+                                <TextBlock Text="Share your first nature discovery with the community"
+                                           FontSize="14"
+                                           Foreground="#9BB39E"
+                                           FontFamily="Trebuchet MS"
+                                           FontStyle="Italic"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,8,0,24"/>
+                                <Button Content="📍 Submit Your First Sighting"
+                                        Height="46"
+                                        Width="280"
+                                        Background="#5FA572"
+                                        Foreground="#0D2818"
+                                        FontFamily="Trebuchet MS"
+                                        FontSize="14"
+                                        FontWeight="Bold"
+                                        BorderThickness="0"
+                                        Cursor="Hand"
+                                        Command="{Binding GoToSubmitSightingCommand}">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="4"/>
                                         </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                    </Button.Resources>
+                                </Button>
                             </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
 
-            <!-- Right: Sighting Details -->
-            <Grid Grid.Column="1" Margin="10,0,0,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+                            <!-- ════════ SECTIONS ════════ -->
+                            <StackPanel>
 
-                <TextBlock Grid.Row="0"
-                           Text="Sighting Details"
-                           FontSize="15" FontWeight="Bold"
-                           Foreground="#D8F3DC"
-                           FontFamily="Trebuchet MS"
-                           Margin="0,0,0,8"/>
+                                <!-- ───── SECTION: NEEDS ATTENTION (Denied) ───── -->
+                                <StackPanel Margin="0,0,0,30"
+                                            Visibility="{Binding HasNeedsAttention, Converter={StaticResource BoolToVisibility}}">
 
-                <Border Grid.Row="1"
-                        Background="#2D6A4F"
-                        BorderBrush="#52B788"
-                        BorderThickness="2"
-                        Padding="15">
-                    <StackPanel>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0">
+                                            <Run Text="🔔 NEEDS YOUR ATTENTION"
+                                                 Foreground="#E05C6E"
+                                                 FontWeight="Bold"/>
+                                            <Run Text="(" Foreground="#9BB39E"/><Run Text="{Binding NeedsAttentionCount, Mode=OneWay}" Foreground="#9BB39E"/><Run Text=")" Foreground="#9BB39E"/>
+                                            <TextBlock.FontSize>13</TextBlock.FontSize>
+                                            <TextBlock.FontFamily>Trebuchet MS</TextBlock.FontFamily>
+                                        </TextBlock>
+                                        <Border Grid.Column="1"
+                                                Height="1"
+                                                Background="#E05C6E"
+                                                Opacity="0.3"
+                                                Margin="14,0,0,0"
+                                                VerticalAlignment="Center"/>
+                                    </Grid>
 
-                        <!-- No selection message -->
-                        <TextBlock Text="Select a sighting from the list to view details."
-                                   Foreground="#95D5B2"
-                                   FontFamily="Trebuchet MS"
-                                   FontSize="13"
-                                   Visibility="{Binding SelectedSighting,
-                                       Converter={StaticResource NullToVisibilityConverter}}"/>
+                                    <ItemsControl ItemsSource="{Binding NeedsAttentionSightings}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource SightingCard}">
+                                                    <StackPanel>
 
-                        <!-- Details panel -->
-                        <StackPanel Visibility="{Binding SelectedSighting,
-                                        Converter={StaticResource NotNullToVisibilityConverter}}">
+                                                        <!-- Header row: photo + title + status pill -->
+                                                        <Grid Margin="0,0,0,12">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="120"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
 
-                            <!-- Top: Title, Status and Photo side by side -->
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="150"/>
-                                </Grid.ColumnDefinitions>
+                                                            <!-- Photo thumbnail -->
+                                                            <Border Grid.Column="0"
+                                                                    Height="100"
+                                                                    CornerRadius="6"
+                                                                    Background="#0D2818"
+                                                                    ClipToBounds="True">
+                                                                <Grid>
+                                                                    <TextBlock Text="🌿"
+                                                                               FontSize="32"
+                                                                               HorizontalAlignment="Center"
+                                                                               VerticalAlignment="Center"
+                                                                               Opacity="0.4"
+                                                                               Visibility="{Binding Photo, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                                                    <Image Source="{Binding Photo, Converter={StaticResource FilePathToImageConverter}}"
+                                                                           Stretch="UniformToFill"
+                                                                           Visibility="{Binding Photo, Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                                                                </Grid>
+                                                            </Border>
 
-                                <!-- Left: Title and Status -->
-                                <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                    <TextBlock Text="{Binding SelectedSighting.Title}"
-                                               FontSize="18" FontWeight="Bold"
-                                               Foreground="#74C69D"
-                                               FontFamily="Trebuchet MS"
-                                               TextWrapping="Wrap"/>
+                                                            <!-- Title + meta -->
+                                                            <StackPanel Grid.Column="1" Margin="18,0,0,0" VerticalAlignment="Top">
+                                                                <Border Style="{StaticResource StatusPill}"
+                                                                        Background="#E05C6E"
+                                                                        Margin="0,0,0,8">
+                                                                    <TextBlock Text="❌ DENIED"
+                                                                               FontSize="10"
+                                                                               FontWeight="Bold"
+                                                                               Foreground="#0D2818"
+                                                                               FontFamily="Trebuchet MS"/>
+                                                                </Border>
+                                                                <TextBlock Text="{Binding Title}"
+                                                                           FontSize="18"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="#F5F0E8"
+                                                                           FontFamily="Trebuchet MS"
+                                                                           TextWrapping="Wrap"/>
+                                                                <TextBlock FontSize="12"
+                                                                           Foreground="#9BB39E"
+                                                                           FontFamily="Trebuchet MS"
+                                                                           Margin="0,6,0,0">
+                                                                    <Run Text="📍 "/>
+                                                                    <Run Text="{Binding Location}"/><Run Text=", "/><Run Text="{Binding Province}"/>
+                                                                </TextBlock>
+                                                                <TextBlock FontSize="11"
+                                                                           Foreground="#9BB39E"
+                                                                           FontFamily="Trebuchet MS"
+                                                                           Margin="0,3,0,0">
+                                                                    <Run Text="Submitted "/>
+                                                                    <Run Text="{Binding DatePosted}"/>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Grid>
 
-                                    <!-- Status Badge -->
-                                    <TextBlock FontSize="14" FontWeight="Bold"
-                                               FontFamily="Trebuchet MS"
-                                               Margin="0,8,0,0">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Text" Value="{Binding SelectedSighting.Status}"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SelectedSighting.Status}" Value="Pending">
-                                                        <Setter Property="Foreground" Value="#FFD700"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding SelectedSighting.Status}" Value="Approved">
-                                                        <Setter Property="Foreground" Value="#52B788"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding SelectedSighting.Status}" Value="Denied">
-                                                        <Setter Property="Foreground" Value="#E05C6E"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding SelectedSighting.Status}" Value="Archived">
-                                                        <Setter Property="Foreground" Value="#9D4DCC"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                                        <!-- Denial reason box -->
+                                                        <Border CornerRadius="6"
+                                                                BorderThickness="1"
+                                                                Padding="14"
+                                                                Margin="0,4,0,12">
+                                                            <Border.Background>
+                                                                <SolidColorBrush Color="#E05C6E" Opacity="0.10"/>
+                                                            </Border.Background>
+                                                            <Border.BorderBrush>
+                                                                <SolidColorBrush Color="#E05C6E" Opacity="0.5"/>
+                                                            </Border.BorderBrush>
+                                                            <StackPanel>
+                                                                <TextBlock Text="❌ REASON FOR DENIAL"
+                                                                           FontSize="10"
+                                                                           FontWeight="Bold"
+                                                                           Foreground="#E05C6E"
+                                                                           FontFamily="Trebuchet MS"/>
+                                                                <TextBlock Text="{Binding DenialReason}"
+                                                                           FontSize="13"
+                                                                           Foreground="#F5F0E8"
+                                                                           FontFamily="Trebuchet MS"
+                                                                           TextWrapping="Wrap"
+                                                                           Margin="0,6,0,0"/>
+                                                            </StackPanel>
+                                                        </Border>
 
-                                    <TextBlock Text="{Binding SelectedSighting.DatePosted}"
-                                               FontSize="12"
-                                               Foreground="#95D5B2"
-                                               FontFamily="Trebuchet MS"
-                                               Margin="0,6,0,0"/>
+                                                        <!-- Action buttons -->
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Button Content="✏️ Edit &amp; Resubmit"
+                                                                    Style="{StaticResource PrimaryActionButton}"
+                                                                    Command="{Binding DataContext.EditAndResubmitCommand,
+                                                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"/>
+                                                            <Button Content="📤 Quick Resubmit"
+                                                                    Style="{StaticResource SecondaryActionButton}"
+                                                                    Command="{Binding DataContext.QuickResubmitCommand,
+                                                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"/>
+                                                            <Button Content="🗑️ Delete"
+                                                                    Style="{StaticResource DangerActionButton}"
+                                                                    Command="{Binding DataContext.DeleteSightingCommand,
+                                                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
 
-                                <!-- Right: Photo Preview -->
-                                <Border Grid.Column="1"
-                                        Background="#1B4332"
-                                        BorderBrush="#52B788"
-                                        BorderThickness="2"
-                                        Height="180">
-                                    <Grid>
-                                        <TextBlock Text="No Photo"
-                                                   Foreground="#95D5B2"
-                                                   FontFamily="Trebuchet MS"
-                                                   FontSize="11"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   Visibility="{Binding SelectedSighting.Photo,
-                                                       Converter={StaticResource NullToVisibilityConverter}}"/>
-                                        <Image Source="{Binding SelectedSighting.Photo, 
-                                                Converter={StaticResource FilePathToImageConverter}}"
-                                                Stretch="Uniform"
-                                                Visibility="{Binding SelectedSighting.Photo,
-                                                Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                                <!-- ───── SECTION: AWAITING REVIEW (Pending) ───── -->
+                                <StackPanel Margin="0,0,0,30"
+                                            Visibility="{Binding HasAwaitingReview, Converter={StaticResource BoolToVisibility}}">
+
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0">
+                                            <Run Text="⏳ AWAITING REVIEW"
+                                                 Foreground="#FFD700"
+                                                 FontWeight="Bold"/>
+                                            <Run Text="(" Foreground="#9BB39E"/><Run Text="{Binding AwaitingReviewCount, Mode=OneWay}" Foreground="#9BB39E"/><Run Text=")" Foreground="#9BB39E"/>
+                                            <TextBlock.FontSize>13</TextBlock.FontSize>
+                                            <TextBlock.FontFamily>Trebuchet MS</TextBlock.FontFamily>
+                                        </TextBlock>
+                                        <Border Grid.Column="1"
+                                                Height="1"
+                                                Background="#FFD700"
+                                                Opacity="0.3"
+                                                Margin="14,0,0,0"
+                                                VerticalAlignment="Center"/>
                                     </Grid>
-                                </Border>
-                            </Grid>
 
-                            <!-- Divider -->
-                            <Separator Background="#52B788" Margin="0,15,0,15"/>
+                                    <ItemsControl ItemsSource="{Binding AwaitingReviewSightings}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource SightingCard}">
+                                                    <StackPanel>
 
-                            <!-- Bottom: Full Details -->
-                            <TextBlock Text="Description"
-                                       FontSize="12" FontWeight="Bold"
-                                       Foreground="#95D5B2"
-                                       FontFamily="Trebuchet MS"
-                                       Margin="0,0,0,2"/>
-                            <TextBlock Text="{Binding SelectedSighting.Description}"
-                                       FontSize="13"
-                                       Foreground="#D8F3DC"
-                                       FontFamily="Trebuchet MS"
-                                       TextWrapping="Wrap"/>
+                                                        <Grid Margin="0,0,0,12">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="120"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
 
-                            <TextBlock Text="Location"
-                                       FontSize="12" FontWeight="Bold"
-                                       Foreground="#95D5B2"
-                                       FontFamily="Trebuchet MS"
-                                       Margin="0,12,0,2"/>
-                            <TextBlock Text="{Binding SelectedSighting.Location}"
-                                       FontSize="13"
-                                       Foreground="#D8F3DC"
-                                       FontFamily="Trebuchet MS"/>
+                                                            <Border Grid.Column="0"
+                                                                    Height="100"
+                                                                    CornerRadius="6"
+                                                                    Background="#0D2818"
+                                                                    ClipToBounds="True">
+                                                                <Grid>
+                                                                    <TextBlock Text="🌿"
+                                                                               FontSize="32"
+                                                                               HorizontalAlignment="Center"
+                                                                               VerticalAlignment="Center"
+                                                                               Opacity="0.4"
+                                                                               Visibility="{Binding Photo, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                                                    <Image Source="{Binding Photo, Converter={StaticResource FilePathToImageConverter}}"
+                                                                           Stretch="UniformToFill"
+                                                                           Visibility="{Binding Photo, Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                                                                </Grid>
+                                                            </Border>
 
-                            <TextBlock Text="Province / Region"
-                                       FontSize="12" FontWeight="Bold"
-                                       Foreground="#95D5B2"
-                                       FontFamily="Trebuchet MS"
-                                       Margin="0,12,0,2"/>
-                            <TextBlock FontSize="13"
-                                       Foreground="#D8F3DC"
-                                       FontFamily="Trebuchet MS">
-                                <Run Text="{Binding SelectedSighting.Province}"/>
-                                <Run Text=" / "/>
-                                <Run Text="{Binding SelectedSighting.Region}"/>
-                            </TextBlock>
+                                                            <StackPanel Grid.Column="1" Margin="18,0,0,0" VerticalAlignment="Top">
+                                                                <Border Style="{StaticResource StatusPill}"
+                                                                        Background="#FFD700"
+                                                                        Margin="0,0,0,8">
+                                                                    <TextBlock Text="⏳ PENDING"
+                                                                               FontSize="10"
+                                                                               FontWeight="Bold"
+                                                                               Foreground="#0D2818"
+                                                                               FontFamily="Trebuchet MS"/>
+                                                                </Border>
+                                                                <TextBlock Text="{Binding Title}"
+                                                                           FontSize="18"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="#F5F0E8"
+                                                                           FontFamily="Trebuchet MS"
+                                                                           TextWrapping="Wrap"/>
+                                                                <TextBlock FontSize="12"
+                                                                           Foreground="#9BB39E"
+                                                                           FontFamily="Trebuchet MS"
+                                                                           Margin="0,6,0,0">
+                                                                    <Run Text="📍 "/>
+                                                                    <Run Text="{Binding Location}"/><Run Text=", "/><Run Text="{Binding Province}"/>
+                                                                </TextBlock>
+                                                                <TextBlock FontSize="11"
+                                                                           Foreground="#9BB39E"
+                                                                           FontFamily="Trebuchet MS"
+                                                                           Margin="0,3,0,0">
+                                                                    <Run Text="Submitted "/>
+                                                                    <Run Text="{Binding DatePosted}"/>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Grid>
 
-                            <TextBlock Text="Coordinates"
-                                       FontSize="12" FontWeight="Bold"
-                                       Foreground="#95D5B2"
-                                       FontFamily="Trebuchet MS"
-                                       Margin="0,12,0,2"/>
-                            <TextBlock FontSize="13"
-                                       Foreground="#D8F3DC"
-                                       FontFamily="Trebuchet MS">
-                                <Run Text="Lat: "/>
-                                <Run Text="{Binding SelectedSighting.Latitude}"/>
-                                <Run Text="  Long: "/>
-                                <Run Text="{Binding SelectedSighting.Longitude}"/>
-                            </TextBlock>
-                            <!-- Denial Reason (only shows if denied) -->
-                            <StackPanel>
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedSighting.Status}" Value="Denied">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
+                                                        <!-- Action buttons (Pending: only Delete) -->
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Button Content="🗑️ Delete"
+                                                                    Style="{StaticResource DangerActionButton}"
+                                                                    Command="{Binding DataContext.DeleteSightingCommand,
+                                                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
 
-                                <TextBlock Text="❌ Reason for Denial"
-                                FontSize="12" FontWeight="Bold"
-                                Foreground="#E05C6E"
-                                FontFamily="Trebuchet MS"
-                                Margin="0,12,0,2"/>
-                                <Border Background="#1B4332"
-                                    BorderBrush="#E05C6E"
-                                    BorderThickness="2"
-                                    Padding="10"
-                                    Margin="0,0,0,5">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding SelectedSighting.DenialReason}"
-                                    FontSize="13"
-                                    Foreground="#D8F3DC"
-                                    FontFamily="Trebuchet MS"
-                                    TextWrapping="Wrap"
-                                    Visibility="{Binding SelectedSighting.DenialReason, Converter={StaticResource NotNullToVisibilityConverter}}"/>
-                                        <TextBlock Text="No reason was provided."
-                                    FontSize="13"
-                                    Foreground="#95D5B2"
-                                    FontFamily="Trebuchet MS"
-                                    FontStyle="Italic"
-                                    Visibility="{Binding SelectedSighting.DenialReason, Converter={StaticResource NullToVisibilityConverter}}"/>
-                                    </StackPanel>
-                                </Border>
+                                <!-- ───── SECTION: LIVE IN FEED (Approved) ───── -->
+                                <StackPanel Margin="0,0,0,30"
+                                            Visibility="{Binding HasLiveInFeed, Converter={StaticResource BoolToVisibility}}">
+
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0">
+                                            <Run Text="✅ LIVE IN FEED"
+                                                 Foreground="#5FA572"
+                                                 FontWeight="Bold"/>
+                                            <Run Text="(" Foreground="#9BB39E"/><Run Text="{Binding LiveInFeedCount, Mode=OneWay}" Foreground="#9BB39E"/><Run Text=")" Foreground="#9BB39E"/>
+                                            <TextBlock.FontSize>13</TextBlock.FontSize>
+                                            <TextBlock.FontFamily>Trebuchet MS</TextBlock.FontFamily>
+                                        </TextBlock>
+                                        <Border Grid.Column="1"
+                                                Height="1"
+                                                Background="#5FA572"
+                                                Opacity="0.3"
+                                                Margin="14,0,0,0"
+                                                VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <ItemsControl ItemsSource="{Binding LiveInFeedSightings}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource SightingCard}">
+                                                    <StackPanel>
+
+                                                        <Grid Margin="0,0,0,12">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="120"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <Border Grid.Column="0"
+                                                                    Height="100"
+                                                                    CornerRadius="6"
+                                                                    Background="#0D2818"
+                                                                    ClipToBounds="True">
+                                                                <Grid>
+                                                                    <TextBlock Text="🌿"
+                                                                               FontSize="32"
+                                                                               HorizontalAlignment="Center"
+                                                                               VerticalAlignment="Center"
+                                                                               Opacity="0.4"
+                                                                               Visibility="{Binding Photo, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                                                    <Image Source="{Binding Photo, Converter={StaticResource FilePathToImageConverter}}"
+                                                                           Stretch="UniformToFill"
+                                                                           Visibility="{Binding Photo, Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                                                                </Grid>
+                                                            </Border>
+
+                                                            <StackPanel Grid.Column="1" Margin="18,0,0,0" VerticalAlignment="Top">
+                                                                <Border Style="{StaticResource StatusPill}"
+                                                                        Background="#52B788"
+                                                                        Margin="0,0,0,8">
+                                                                    <TextBlock Text="✅ APPROVED"
+                                                                               FontSize="10"
+                                                                               FontWeight="Bold"
+                                                                               Foreground="#0D2818"
+                                                                               FontFamily="Trebuchet MS"/>
+                                                                </Border>
+                                                                <TextBlock Text="{Binding Title}"
+                                                                           FontSize="18"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="#F5F0E8"
+                                                                           FontFamily="Trebuchet MS"
+                                                                           TextWrapping="Wrap"/>
+                                                                <TextBlock FontSize="12"
+                                                                           Foreground="#9BB39E"
+                                                                           FontFamily="Trebuchet MS"
+                                                                           Margin="0,6,0,0">
+                                                                    <Run Text="📍 "/>
+                                                                    <Run Text="{Binding Location}"/><Run Text=", "/><Run Text="{Binding Province}"/>
+                                                                </TextBlock>
+                                                                <TextBlock FontSize="11"
+                                                                           Foreground="#9BB39E"
+                                                                           FontFamily="Trebuchet MS"
+                                                                           Margin="0,3,0,0">
+                                                                    <Run Text="Submitted "/>
+                                                                    <Run Text="{Binding DatePosted}"/>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Grid>
+
+                                                        <!-- Action buttons (Approved: View in Feed) -->
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Button Content="View in Feed →"
+                                                                    Style="{StaticResource PrimaryActionButton}"
+                                                                    Command="{Binding DataContext.ViewInFeedCommand,
+                                                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+
+                                <!-- ───── SECTION: ARCHIVED ───── -->
+                                <StackPanel Margin="0,0,0,30"
+                                            Visibility="{Binding HasArchived, Converter={StaticResource BoolToVisibility}}">
+
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0">
+                                            <Run Text="📦 ARCHIVED"
+                                                 Foreground="#9D4DCC"
+                                                 FontWeight="Bold"/>
+                                            <Run Text="(" Foreground="#9BB39E"/><Run Text="{Binding ArchivedCount, Mode=OneWay}" Foreground="#9BB39E"/><Run Text=")" Foreground="#9BB39E"/>
+                                            <TextBlock.FontSize>13</TextBlock.FontSize>
+                                            <TextBlock.FontFamily>Trebuchet MS</TextBlock.FontFamily>
+                                        </TextBlock>
+                                        <Border Grid.Column="1"
+                                                Height="1"
+                                                Background="#9D4DCC"
+                                                Opacity="0.3"
+                                                Margin="14,0,0,0"
+                                                VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <ItemsControl ItemsSource="{Binding ArchivedSightings}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource SightingCard}">
+                                                    <StackPanel>
+
+                                                        <Grid Margin="0,0,0,12">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="120"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <Border Grid.Column="0"
+                                                                    Height="100"
+                                                                    CornerRadius="6"
+                                                                    Background="#0D2818"
+                                                                    ClipToBounds="True">
+                                                                <Grid>
+                                                                    <TextBlock Text="🌿"
+                                                                               FontSize="32"
+                                                                               HorizontalAlignment="Center"
+                                                                               VerticalAlignment="Center"
+                                                                               Opacity="0.4"
+                                                                               Visibility="{Binding Photo, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                                                    <Image Source="{Binding Photo, Converter={StaticResource FilePathToImageConverter}}"
+                                                                           Stretch="UniformToFill"
+                                                                           Visibility="{Binding Photo, Converter={StaticResource NotNullToVisibilityConverter}}"/>
+                                                                </Grid>
+                                                            </Border>
+
+                                                            <StackPanel Grid.Column="1" Margin="18,0,0,0" VerticalAlignment="Top">
+                                                                <Border Style="{StaticResource StatusPill}"
+                                                                        Background="#9D4DCC"
+                                                                        Margin="0,0,0,8">
+                                                                    <TextBlock Text="📦 ARCHIVED"
+                                                                               FontSize="10"
+                                                                               FontWeight="Bold"
+                                                                               Foreground="#F5F0E8"
+                                                                               FontFamily="Trebuchet MS"/>
+                                                                </Border>
+                                                                <TextBlock Text="{Binding Title}"
+                                                                           FontSize="18"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="#F5F0E8"
+                                                                           FontFamily="Trebuchet MS"
+                                                                           TextWrapping="Wrap"/>
+                                                                <TextBlock FontSize="12"
+                                                                           Foreground="#9BB39E"
+                                                                           FontFamily="Trebuchet MS"
+                                                                           Margin="0,6,0,0">
+                                                                    <Run Text="📍 "/>
+                                                                    <Run Text="{Binding Location}"/><Run Text=", "/><Run Text="{Binding Province}"/>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Grid>
+
+                                                        <!-- Archive reason box -->
+                                                        <Border CornerRadius="6"
+                                                                BorderThickness="1"
+                                                                Padding="14"
+                                                                Margin="0,4,0,12">
+                                                            <Border.Background>
+                                                                <SolidColorBrush Color="#9D4DCC" Opacity="0.10"/>
+                                                            </Border.Background>
+                                                            <Border.BorderBrush>
+                                                                <SolidColorBrush Color="#9D4DCC" Opacity="0.5"/>
+                                                            </Border.BorderBrush>
+                                                            <StackPanel>
+                                                                <TextBlock Text="📦 REASON FOR ARCHIVE"
+                                                                           FontSize="10"
+                                                                           FontWeight="Bold"
+                                                                           Foreground="#9D4DCC"
+                                                                           FontFamily="Trebuchet MS"/>
+                                                                <TextBlock Text="{Binding ArchiveReason}"
+                                                                           FontSize="13"
+                                                                           Foreground="#F5F0E8"
+                                                                           FontFamily="Trebuchet MS"
+                                                                           TextWrapping="Wrap"
+                                                                           Margin="0,6,0,0"/>
+                                                            </StackPanel>
+                                                        </Border>
+
+                                                        <!-- Action buttons (Archived: only Edit & Resubmit) -->
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Button Content="✏️ Edit &amp; Resubmit"
+                                                                    Style="{StaticResource PrimaryActionButton}"
+                                                                    Command="{Binding DataContext.EditAndResubmitCommand,
+                                                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+
                             </StackPanel>
-                            
-                            <!-- Archive Reason (only shows if archived) -->
-                            <StackPanel>
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedSighting.Status}" Value="Archived">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
 
-                                <TextBlock Text="📦 Reason for Archive"
-   FontSize="12" FontWeight="Bold"
-   Foreground="#9D4DCC"
-   FontFamily="Trebuchet MS"
-   Margin="0,12,0,2"/>
-                                <Border Background="#1B4332"
-BorderBrush="#9D4DCC"
-BorderThickness="2"
-Padding="10"
-Margin="0,0,0,5">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding SelectedSighting.ArchiveReason}"
-           FontSize="13"
-           Foreground="#D8F3DC"
-           FontFamily="Trebuchet MS"
-           TextWrapping="Wrap"
-           Visibility="{Binding SelectedSighting.ArchiveReason, Converter={StaticResource NotNullToVisibilityConverter}}"/>
-                                        <TextBlock Text="No reason was provided."
-           FontSize="13"
-           Foreground="#95D5B2"
-           FontFamily="Trebuchet MS"
-           FontStyle="Italic"
-           Visibility="{Binding SelectedSighting.ArchiveReason, Converter={StaticResource NullToVisibilityConverter}}"/>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
-
-
-                        </StackPanel>
-                    </StackPanel>
-                    
-                </Border>
+                        </Grid>
+                    </Grid>
+                </ScrollViewer>
             </Grid>
-        </Grid>
 
-        <!-- Bottom Buttons -->
-        <Grid Grid.Row="2" Margin="20,10,20,20">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-
-            <Button Grid.Column="0"
-            Content="← Back"
-            Height="45"
-            Margin="0,0,5,0"
-            Background="#2D6A4F"
-            Foreground="#D8F3DC"
-            FontFamily="Trebuchet MS"
-            FontSize="14" FontWeight="Bold"
-            BorderBrush="#52B788" BorderThickness="2"
-            Command="{Binding GoBackCommand}"/>
-
-            <Button Grid.Column="1"
-            Content="📤 Quick Resubmit"
-            Height="45"
-            Margin="5,0,5,0"
-            Background="#52B788"
-            Foreground="#1B4332"
-            FontFamily="Trebuchet MS"
-            FontSize="13" FontWeight="Bold"
-            BorderBrush="#74C69D" BorderThickness="2"
-            Command="{Binding QuickResubmitCommand}"/>
-
-            <Button Grid.Column="2"
-            Content="✏️ Edit &amp; Resubmit"
-            Height="45"
-            Margin="5,0,5,0"
-            Background="#52B788"
-            Foreground="#1B4332"
-            FontFamily="Trebuchet MS"
-            FontSize="13" FontWeight="Bold"
-            BorderBrush="#74C69D" BorderThickness="2"
-            Command="{Binding EditAndResubmitCommand}"/>
-
-            <Button Grid.Column="3"
-            Content="🗑️ Delete"
-            Height="45"
-            Margin="5,0,0,0"
-            Background="#B7374A"
-            Foreground="#FFFFFF"
-            FontFamily="Trebuchet MS"
-            FontSize="14" FontWeight="Bold"
-            BorderBrush="#E05C6E" BorderThickness="2"
-            Command="{Binding DeleteSightingCommand}"/>
-        </Grid>
-    </Grid>
+        </v:AppShell.PageContent>
+    </v:AppShell>
 </UserControl>
