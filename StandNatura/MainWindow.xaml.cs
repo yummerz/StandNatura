@@ -23,7 +23,7 @@ namespace StandNatura
         {
             _currentUser = user;
 
-            if (user.Role == "Admin")
+            if (user.Role == "Admin" || user.Role == "SuperAdmin")
                 DataContext = new AdminHomeViewModel(Navigate, _currentUser, ShowLogin);
             else
                 DataContext = new ContributorHomeViewModel(Navigate, _currentUser, ShowLogin);

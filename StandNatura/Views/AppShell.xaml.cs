@@ -13,6 +13,12 @@ namespace StandNatura.Views
         private const double MenuWidth = 320;
         private const int AnimationMs = 250;
 
+        // Raised when the hamburger drawer opens/closes so a host view can react —
+        // e.g. hide an airspace WebView2 that would otherwise render on top of the
+        // WPF menu overlay and swallow its clicks.
+        public event EventHandler? MenuOpened;
+        public event EventHandler? MenuClosed;
+
         // ── PageContent: the host view's content ──────────────
         public static readonly DependencyProperty PageContentProperty =
             DependencyProperty.Register(
@@ -123,6 +129,7 @@ namespace StandNatura.Views
         {
             _isMenuOpen = true;
             MenuDimOverlay.IsHitTestVisible = true;
+            MenuOpened?.Invoke(this, EventArgs.Empty);
 
             var slideIn = new DoubleAnimation
             {
@@ -163,7 +170,13 @@ namespace StandNatura.Views
                 Duration = TimeSpan.FromMilliseconds(AnimationMs)
             };
 
-            fadeOut.Completed += (s, e) => MenuDimOverlay.IsHitTestVisible = false;
+            fadeOut.Completed += (s, e) =>
+            {
+                MenuDimOverlay.IsHitTestVisible = false;
+                // Restore the map only after the close animation finishes, so the
+                // reappearing native surface doesn't cover the still-closing menu.
+                MenuClosed?.Invoke(this, EventArgs.Empty);
+            };
 
             ((TranslateTransform)MenuPanel.RenderTransform).BeginAnimation(
                 TranslateTransform.XProperty, slideOut);

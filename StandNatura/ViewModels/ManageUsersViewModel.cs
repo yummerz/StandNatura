@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows;
 using StandNatura.Commands;
 using StandNatura.Models;
+using StandNatura.Services;
 using Microsoft.Data.SqlClient;
 
 namespace StandNatura.ViewModels
@@ -114,11 +115,13 @@ namespace StandNatura.ViewModels
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    string query = "INSERT INTO Users (Username, Password, Role) VALUES (@username, @password, @role)";
+                    var (hash, salt) = PasswordHasher.HashPassword(NewPassword.Trim());
+                    string query = "INSERT INTO Users (Username, PasswordHash, Salt, Role) VALUES (@username, @hash, @salt, @role)";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@username", NewUsername.Trim());
-                        command.Parameters.AddWithValue("@password", NewPassword.Trim());
+                        command.Parameters.AddWithValue("@hash", hash);
+                        command.Parameters.AddWithValue("@salt", salt);
                         command.Parameters.AddWithValue("@role", NewRole);
                         connection.Open();
                         command.ExecuteNonQuery();
@@ -142,15 +145,39 @@ namespace StandNatura.ViewModels
         // ── DELETE USER ───────────────────────────────────────
         private void DeleteUser()
         {
-            if (SelectedUser!.Id == _currentUser.Id)
+            User target = SelectedUser!;
+            string acting = _currentUser.Role;
+
+            if (acting == "Admin")
             {
-                MessageBox.Show("You cannot delete your own account.", "Action Blocked",
+                // Admins may delete Contributors only.
+                if (target.Role == "Admin" || target.Role == "SuperAdmin")
+                {
+                    MessageBox.Show("Admins can only delete Contributor accounts.", "Action Blocked",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            else if (acting == "SuperAdmin")
+            {
+                // SuperAdmins may delete anyone except themselves.
+                if (target.Id == _currentUser.Id)
+                {
+                    MessageBox.Show("You cannot delete your own account.", "Action Blocked",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            else
+            {
+                // Defensive default — only Admins/SuperAdmins reach this screen.
+                MessageBox.Show("You do not have permission to delete users.", "Action Blocked",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             var result = MessageBox.Show(
-                $"Are you sure you want to delete '{SelectedUser.Username}'?\n\nThis action cannot be undone.",
+                $"Are you sure you want to delete '{target.Username}'?\n\nThis action cannot be undone.",
                 "Confirm Delete",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
@@ -164,17 +191,23 @@ namespace StandNatura.ViewModels
                         string query = "DELETE FROM Users WHERE Id = @id";
                         using (SqlCommand command = new SqlCommand(query, connection))
                         {
-                            command.Parameters.AddWithValue("@id", SelectedUser.Id);
+                            command.Parameters.AddWithValue("@id", target.Id);
                             connection.Open();
                             command.ExecuteNonQuery();
                         }
                     }
 
-                    MessageBox.Show($"User '{SelectedUser.Username}' has been deleted.", "Success",
+                    MessageBox.Show($"User '{target.Username}' has been deleted.", "Success",
                         MessageBoxButton.OK, MessageBoxImage.Information);
 
                     SelectedUser = null;
                     LoadUsers();
+                }
+                catch (SqlException ex) when (ex.Number == 50003)
+                {
+                    // Friendly message raised by trg_Users_PreventLastSuperAdminDelete.
+                    MessageBox.Show(ex.Message, "Action Blocked",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
                 catch (Exception ex)
                 {

@@ -1,0 +1,5 @@
+{
+  "_comment": "Rename a COPY of this to 'recaptcha.local.json' (that name is git-ignored) and place it next to the built app at StandNatura\\bin\\Debug\\net8.0-windows\\recaptcha.local.json. Paste your reCAPTCHA v2 (checkbox) keys below. siteKey is public; secretKey is used for server-side siteverify.",
+  "siteKey": "YOUR_RECAPTCHA_V2_SITE_KEY",
+  "secretKey": "YOUR_RECAPTCHA_V2_SECRET_KEY"
+}

@@ -118,13 +118,12 @@ namespace StandNatura.ViewModels
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    string query = "SELECT SUM(Amount) FROM Donation WHERE SightingId = @sightingId";
+                    string query = "SELECT dbo.fn_TotalFundsForSighting(@sightingId)";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@sightingId", sightingId);
                         connection.Open();
-                        var result = command.ExecuteScalar();
-                        TotalFunds = result != DBNull.Value ? (decimal)result : 0;
+                        TotalFunds = (decimal)command.ExecuteScalar();  // UDF ISNULLs to 0
                     }
                 }
             }

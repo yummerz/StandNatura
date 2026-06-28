@@ -5,6 +5,7 @@ using StandNatura.Commands;
 using StandNatura.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.Win32;
+using System.IO;
 
 namespace StandNatura.ViewModels
 {
@@ -12,6 +13,13 @@ namespace StandNatura.ViewModels
     {
         private static readonly string connectionString = DatabaseConfig.ConnectionString;
         private readonly int? _editingSightingId;
+
+        // Photos are copied here (relative to the app folder) so the stored
+        // path is portable across machines instead of an absolute C:\... path.
+        private const string PhotoFolderRelative = @"Assets\SightingPhotos";
+
+        // Max NEW sightings a user may create per calendar day (anti-spam).
+        private const int DailySubmissionLimit = 3;
 
         // ── ACTIVE PAGE KEY ───────────────────────────────────
         public override string ActivePageKey => "Submit";
@@ -167,6 +175,34 @@ namespace StandNatura.ViewModels
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
+                    connection.Open();
+
+                    // Daily cap: a user may create at most DailySubmissionLimit NEW sightings
+                    // per calendar day. Resubmissions (edits to an existing row) are exempt and
+                    // never blocked — but their bumped DatePosted still counts toward the total.
+                    if (!_editingSightingId.HasValue)
+                    {
+                        string countQuery = @"
+                            SELECT COUNT(*) FROM Sighting
+                            WHERE UserId = @userId
+                              AND DatePosted >= CAST(GETDATE() AS DATE)
+                              AND DatePosted <  DATEADD(DAY, 1, CAST(GETDATE() AS DATE))";
+                        using (SqlCommand countCmd = new SqlCommand(countQuery, connection))
+                        {
+                            countCmd.Parameters.AddWithValue("@userId", _currentUser.Id);
+                            int todayCount = (int)countCmd.ExecuteScalar();
+                            if (todayCount >= DailySubmissionLimit)
+                            {
+                                MessageBox.Show(
+                                    $"You've reached today's limit of {DailySubmissionLimit} sightings. " +
+                                    "You can submit again tomorrow.",
+                                    "Daily Limit Reached",
+                                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                                return;
+                            }
+                        }
+                    }
+
                     string query;
 
                     if (_editingSightingId.HasValue)
@@ -203,13 +239,13 @@ namespace StandNatura.ViewModels
 
                         command.Parameters.AddWithValue("@title", Title.Trim());
                         command.Parameters.AddWithValue("@description", Description.Trim());
-                        command.Parameters.AddWithValue("@photo", string.IsNullOrEmpty(PhotoPath) ? DBNull.Value : (object)PhotoPath);
+                        string? storedPhoto = ResolvePhotoForStorage();
+                        command.Parameters.AddWithValue("@photo", storedPhoto is null ? DBNull.Value : (object)storedPhoto);
                         command.Parameters.AddWithValue("@location", Location.Trim());
                         command.Parameters.AddWithValue("@province", Province.Trim());
                         command.Parameters.AddWithValue("@region", Region.Trim());
                         command.Parameters.AddWithValue("@longitude", longitude);
                         command.Parameters.AddWithValue("@latitude", latitude);
-                        connection.Open();
                         command.ExecuteNonQuery();
                     }
                 }
@@ -230,6 +266,37 @@ namespace StandNatura.ViewModels
             {
                 MessageBox.Show("Failed to submit sighting: " + ex.Message);
             }
+        }
+
+        // ── PHOTO STORAGE ─────────────────────────────────────
+        // Decides what to store in the DB Photo column.
+        private string? ResolvePhotoForStorage()
+        {
+            if (string.IsNullOrWhiteSpace(PhotoPath))
+                return null;
+
+            // Already an app-relative path (resubmitting without changing photo).
+            if (!Path.IsPathRooted(PhotoPath))
+                return PhotoPath;
+
+            // A freshly-picked absolute path → copy it into the app folder.
+            if (File.Exists(PhotoPath))
+                return CopyPhotoIntoAppFolder(PhotoPath);
+
+            // Absolute path that no longer exists (e.g. old data) → leave as-is.
+            return PhotoPath;
+        }
+
+        private static string CopyPhotoIntoAppFolder(string sourcePath)
+        {
+            string targetDir = Path.Combine(AppContext.BaseDirectory, PhotoFolderRelative);
+            Directory.CreateDirectory(targetDir);
+
+            string fileName = $"{Guid.NewGuid():N}{Path.GetExtension(sourcePath)}";
+            File.Copy(sourcePath, Path.Combine(targetDir, fileName), overwrite: false);
+
+            // Store a RELATIVE path so it resolves on any machine.
+            return Path.Combine(PhotoFolderRelative, fileName);
         }
 
         // ── CLEAR FORM ────────────────────────────────────────

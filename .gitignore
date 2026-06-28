@@ -361,3 +361,12 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# StandNatura — local Google Maps API key (never commit)
+maps.local.txt
+
+# StandNatura — local Google OAuth client secrets (never commit)
+google.local.json
+
+# StandNatura — local reCAPTCHA keys (never commit)
+recaptcha.local.json

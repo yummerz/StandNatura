@@ -1,0 +1,10 @@
+{
+  "_comment": "Rename a COPY of this file to 'google.local.json' (that name is git-ignored) and place it next to the built app at StandNatura\\bin\\Debug\\net8.0-windows\\google.local.json. Then paste the contents of the OAuth client JSON you downloaded from Google Cloud (OAuth client type: Desktop app). The structure below matches that download.",
+  "installed": {
+    "client_id": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+    "client_secret": "YOUR_CLIENT_SECRET",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "redirect_uris": ["http://localhost"]
+  }
+}

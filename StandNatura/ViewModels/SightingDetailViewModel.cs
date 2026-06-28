@@ -22,8 +22,8 @@ namespace StandNatura.ViewModels
         public override string ActivePageKey => string.Empty;
         private static readonly string connectionString = DatabaseConfig.ConnectionString;
         // ── ADMIN MODE ────────────────────────────────────────
-        public bool IsAdmin => _currentUser.Role == "Admin";
-        public bool IsContributor => _currentUser.Role != "Admin";
+        public bool IsAdmin => _currentUser.Role == "Admin" || _currentUser.Role == "SuperAdmin";
+        public bool IsContributor => !IsAdmin;
 
         // ── SIGHTING INFO ─────────────────────────────────────
         public SightingDisplay Sighting { get; }
@@ -181,59 +181,33 @@ namespace StandNatura.ViewModels
                 {
                     connection.Open();
 
-                    // Get petition id
+                    // Get petition id for this sighting
                     int petitionId;
-                    string getPetitionQuery = "SELECT PetitionId FROM Petition WHERE SightingId = @sightingId";
-                    using (SqlCommand command = new SqlCommand(getPetitionQuery, connection))
+                    using (SqlCommand getCmd = new SqlCommand(
+                        "SELECT PetitionId FROM Petition WHERE SightingId = @sightingId", connection))
                     {
-                        command.Parameters.AddWithValue("@sightingId", Sighting.SightingId);
-                        petitionId = (int)command.ExecuteScalar();
+                        getCmd.Parameters.AddWithValue("@sightingId", Sighting.SightingId);
+                        petitionId = (int)getCmd.ExecuteScalar();
                     }
 
-                    if (HasSigned)
+                    // One atomic call; trg_PetitionSignature_SyncDemandCount keeps
+                    // Petition.DemandCount correct, so we no longer touch it here.
+                    using (SqlCommand command = new SqlCommand("dbo.usp_TogglePetitionSignature", connection))
                     {
-                        // Unsign
-                        string deleteQuery = "DELETE FROM PetitionSignature WHERE PetitionId = @petitionId AND UserId = @userId";
-                        using (SqlCommand command = new SqlCommand(deleteQuery, connection))
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@PetitionId", petitionId);
+                        command.Parameters.AddWithValue("@UserId", _currentUser.Id);
+                        using (SqlDataReader reader = command.ExecuteReader())
                         {
-                            command.Parameters.AddWithValue("@petitionId", petitionId);
-                            command.Parameters.AddWithValue("@userId", _currentUser.Id);
-                            command.ExecuteNonQuery();
+                            if (reader.Read())
+                            {
+                                HasSigned = (bool)reader["HasSigned"];
+                                DemandCount = (int)reader["DemandCount"];
+                            }
                         }
-
-                        string updateQuery = "UPDATE Petition SET DemandCount = DemandCount - 1 WHERE PetitionId = @petitionId";
-                        using (SqlCommand command = new SqlCommand(updateQuery, connection))
-                        {
-                            command.Parameters.AddWithValue("@petitionId", petitionId);
-                            command.ExecuteNonQuery();
-                        }
-
-                        HasSigned = false;
-                        DemandCount--;
-                        PetitionButtonText = "✊ Sign Petition";
                     }
-                    else
-                    {
-                        // Sign
-                        string insertQuery = "INSERT INTO PetitionSignature (PetitionId, UserId) VALUES (@petitionId, @userId)";
-                        using (SqlCommand command = new SqlCommand(insertQuery, connection))
-                        {
-                            command.Parameters.AddWithValue("@petitionId", petitionId);
-                            command.Parameters.AddWithValue("@userId", _currentUser.Id);
-                            command.ExecuteNonQuery();
-                        }
 
-                        string updateQuery = "UPDATE Petition SET DemandCount = DemandCount + 1 WHERE PetitionId = @petitionId";
-                        using (SqlCommand command = new SqlCommand(updateQuery, connection))
-                        {
-                            command.Parameters.AddWithValue("@petitionId", petitionId);
-                            command.ExecuteNonQuery();
-                        }
-
-                        HasSigned = true;
-                        DemandCount++;
-                        PetitionButtonText = "✊ Unsign Petition";
-                    }
+                    PetitionButtonText = HasSigned ? "✊ Unsign Petition" : "✊ Sign Petition";
                 }
             }
             catch (Exception ex)
@@ -249,13 +223,12 @@ namespace StandNatura.ViewModels
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    string query = "SELECT SUM(Amount) FROM Donation WHERE SightingId = @sightingId";
+                    string query = "SELECT dbo.fn_TotalFundsForSighting(@sightingId)";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@sightingId", Sighting.SightingId);
                         connection.Open();
-                        var result = command.ExecuteScalar();
-                        TotalFunds = result != DBNull.Value ? (decimal)result : 0;
+                        TotalFunds = (decimal)command.ExecuteScalar();  // UDF ISNULLs to 0
                     }
                 }
             }
@@ -314,21 +287,14 @@ namespace StandNatura.ViewModels
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    // User can comment if they have a donation that hasn't been used for a comment yet
-                    string query = @"
-                SELECT COUNT(*) FROM Donation d
-                WHERE d.UserId = @userId 
-                  AND d.SightingId = @sightingId
-                  AND NOT EXISTS (
-                      SELECT 1 FROM Comment c WHERE c.DonationId = d.DonationId
-                  )";
+                    // Eligibility ("1 donation = 1 comment") is encapsulated in the UDF.
+                    string query = "SELECT dbo.fn_CanUserComment(@userId, @sightingId)";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@userId", _currentUser.Id);
                         command.Parameters.AddWithValue("@sightingId", Sighting.SightingId);
                         connection.Open();
-                        int count = (int)command.ExecuteScalar();
-                        CanComment = count > 0;
+                        CanComment = (bool)command.ExecuteScalar();
                     }
                 }
             }
@@ -388,31 +354,15 @@ namespace StandNatura.ViewModels
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    // Get latest donation id for this user and sighting
-                    int donationId;
-                    string getDonationQuery = @"
-                        SELECT TOP 1 d.DonationId FROM Donation d
-                        WHERE d.UserId = @userId 
-                        AND d.SightingId = @sightingId
-                        AND NOT EXISTS (
-                        SELECT 1 FROM Comment c WHERE c.DonationId = d.DonationId
-                        )
-                        ORDER BY d.DonationId DESC";
-
-                    using (SqlCommand command = new SqlCommand(getDonationQuery, connection))
+                    // Atomic: the proc finds the user's unused donation and inserts the
+                    // comment, or raises 50001 if there is no eligible donation.
+                    using (SqlCommand command = new SqlCommand("dbo.usp_PostDonationComment", connection))
                     {
-                        command.Parameters.AddWithValue("@userId", _currentUser.Id);
-                        command.Parameters.AddWithValue("@sightingId", Sighting.SightingId);
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@UserId", _currentUser.Id);
+                        command.Parameters.AddWithValue("@SightingId", Sighting.SightingId);
+                        command.Parameters.AddWithValue("@CommentText", CommentText.Trim());
                         connection.Open();
-                        donationId = (int)command.ExecuteScalar();
-                    }
-
-                    string insertQuery = "INSERT INTO Comment (SightingId, DonationId, CommentText) VALUES (@sightingId, @donationId, @commentText)";
-                    using (SqlCommand command = new SqlCommand(insertQuery, connection))
-                    {
-                        command.Parameters.AddWithValue("@sightingId", Sighting.SightingId);
-                        command.Parameters.AddWithValue("@donationId", donationId);
-                        command.Parameters.AddWithValue("@commentText", CommentText.Trim());
                         command.ExecuteNonQuery();
                     }
                 }
@@ -420,6 +370,12 @@ namespace StandNatura.ViewModels
                 CommentText = string.Empty;
                 LoadComments();
                 CheckIfCanComment(); // Re-evaluate — they just used up their donation
+            }
+            catch (SqlException ex) when (ex.Number == 50001)
+            {
+                // Friendly message raised by usp_PostDonationComment (no unused donation).
+                MessageBox.Show(ex.Message, "Cannot Comment",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception ex)
             {

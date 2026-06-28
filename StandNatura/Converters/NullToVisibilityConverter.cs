@@ -40,6 +40,12 @@ namespace StandNatura.Converters
                     return null;
 
                 string path = value.ToString()!;
+
+                // New values are relative to the app folder; resolve them.
+                // Old absolute paths are used as-is (backward compatible).
+                if (!System.IO.Path.IsPathRooted(path))
+                    path = System.IO.Path.Combine(AppContext.BaseDirectory, path);
+
                 if (!System.IO.File.Exists(path))
                     return null;
 

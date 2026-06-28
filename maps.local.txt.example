@@ -1,0 +1,8 @@
+# HOW TO USE:
+#   1. Copy this file and rename the copy to "maps.local.txt"
+#   2. Put it next to the built app:
+#        StandNatura\bin\Debug\net8.0-windows\maps.local.txt
+#   3. Paste your Google Maps JavaScript API key below (this file is git-ignored).
+#
+# Lines starting with # and blank lines are ignored.
+AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX

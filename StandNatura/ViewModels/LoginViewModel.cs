@@ -1,7 +1,9 @@
 ﻿using System;
 using StandNatura.Commands;
 using StandNatura.Models;
+using StandNatura.Services;
 using System.Windows.Input;
+using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using System.Windows;
 
@@ -31,6 +33,7 @@ namespace StandNatura.ViewModels
         // ── COMMANDS ──────────────────────────────────────────
         public ICommand LoginCommand { get; }
         public ICommand GoToRegisterCommand { get; }
+        public ICommand GoogleSignInCommand { get; }
 
         // ── CONSTRUCTOR ───────────────────────────────────────
         public LoginViewModel(Action<User> onLoginSuccess, Action<BaseViewModel>? navigate = null)
@@ -39,6 +42,7 @@ namespace StandNatura.ViewModels
             _navigate = navigate;
             LoginCommand = new RelayCommand(ExecuteLogin, CanLogin);
             GoToRegisterCommand = new RelayCommand(GoToRegister);
+            GoogleSignInCommand = new AsyncRelayCommand(() => GoogleSignInService.SignInAsync(_onLoginSuccess));
         }
 
         // ── COMMAND LOGIC ─────────────────────────────────────
@@ -54,24 +58,29 @@ namespace StandNatura.ViewModels
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    string query = "SELECT * FROM Users WHERE Username = @username AND Password = @password";
+                    string query = "SELECT Id, Username, PasswordHash, Salt, Role FROM Users WHERE Username = @username";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@username", Username.Trim());
-                        command.Parameters.AddWithValue("@password", Password.Trim());
                         connection.Open();
 
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
                             if (reader.Read())
                             {
-                                loggedInUser = new User
+                                string storedHash = reader["PasswordHash"].ToString()!;
+                                string salt = reader["Salt"].ToString()!;
+
+                                // Hash the entered password with the stored salt and compare.
+                                if (PasswordHasher.Verify(Password.Trim(), storedHash, salt))
                                 {
-                                    Id = (int)reader["Id"],
-                                    Username = reader["Username"].ToString()!,
-                                    Password = reader["Password"].ToString()!,
-                                    Role = reader["Role"].ToString()!
-                                };
+                                    loggedInUser = new User
+                                    {
+                                        Id = (int)reader["Id"],
+                                        Username = reader["Username"].ToString()!,
+                                        Role = reader["Role"].ToString()!
+                                    };
+                                }
                             }
                         }
                     }

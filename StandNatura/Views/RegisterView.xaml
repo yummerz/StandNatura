@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:svgc="clr-namespace:SharpVectors.Converters;assembly=SharpVectors.Converters.Wpf"
              mc:Ignorable="d">
 
     <!-- ============================================================
@@ -229,6 +230,28 @@
                                          FontFamily="Trebuchet MS"/>
                         </Border>
 
+                        <!-- reCAPTCHA verification — opens a larger popup window so
+                             image challenges aren't clipped. The button text reflects
+                             whether verification has been completed. -->
+                        <Button Margin="0,22,0,0"
+                                Height="44"
+                                Background="#0D2818"
+                                Foreground="#F5F0E8"
+                                FontFamily="Trebuchet MS"
+                                FontSize="14"
+                                FontWeight="Bold"
+                                BorderBrush="#4D5FA572"
+                                BorderThickness="1"
+                                Cursor="Hand"
+                                Content="{Binding CaptchaButtonText}"
+                                Click="OpenCaptcha_Click">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="4"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+
                         <!-- Create Account button -->
                         <Button Content="Create Account"
                                 Margin="0,30,0,0"
@@ -273,6 +296,35 @@
                                     Opacity="0.3"
                                     VerticalAlignment="Center"/>
                         </Grid>
+
+                        <!-- Sign in with Google (same shared flow as Login screen) -->
+                        <Button Margin="0,16,0,0"
+                                Height="44"
+                                Background="#0D2818"
+                                Foreground="#F5F0E8"
+                                FontFamily="Trebuchet MS"
+                                FontSize="14"
+                                FontWeight="Bold"
+                                BorderBrush="#4D5FA572"
+                                BorderThickness="1"
+                                Cursor="Hand"
+                                Command="{Binding GoogleSignInCommand}">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="4"/>
+                                </Style>
+                            </Button.Resources>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <!-- Official Google "G" SVG (carries its own dark badge),
+                                     rendered natively via SharpVectors -->
+                                <svgc:SvgViewbox Source="/Assets/google-g-logo.svg"
+                                                 Width="24" Height="24"
+                                                 Margin="0,0,10,0"
+                                                 VerticalAlignment="Center"/>
+                                <TextBlock Text="Sign in with Google"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
                         <!-- Back to Login link -->
                         <StackPanel Orientation="Horizontal"

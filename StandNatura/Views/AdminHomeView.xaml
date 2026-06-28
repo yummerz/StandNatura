@@ -1,100 +1,207 @@
-﻿<UserControl x:Class="StandNatura.Views.AdminHomeView"
+<UserControl x:Class="StandNatura.Views.AdminHomeView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <!-- Card button: icon above label; fill a step lighter than the page = raised
+             (depth without a drop shadow). Lightens on hover, darkens on press. -->
+        <Style x:Key="CardButton" TargetType="Button">
+            <Setter Property="Background" Value="#245A41"/>
+            <Setter Property="BorderBrush" Value="#335FA572"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Width" Value="190"/>
+            <Setter Property="Height" Value="115"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#2D6A4F"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#1F4D3A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
     <Grid Background="#1B4332">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>  <!-- header -->
+            <RowDefinition Height="Auto"/>  <!-- status strip -->
+            <RowDefinition Height="*"/>     <!-- menu -->
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Grid Grid.Row="0" Margin="20,20,20,10">
-            <StackPanel HorizontalAlignment="Center">
-                <TextBlock Text="🌿 StandNatura"
-                           FontSize="42" FontWeight="Bold"
-                           Foreground="#74C69D"
-                           HorizontalAlignment="Center"
-                           FontFamily="Trebuchet MS"/>
-                <TextBlock Text="Admin Dashboard"
-                           FontSize="16"
-                           Foreground="#95D5B2"
-                           HorizontalAlignment="Center"
+        <!-- Header (slim bar, matching the Contributor AppShell header) -->
+        <Border Grid.Row="0"
+                Padding="20,15,20,15"
+                BorderBrush="#5FA572"
+                BorderThickness="0,0,0,1">
+            <Border.Background>
+                <SolidColorBrush Color="#0D2818" Opacity="0.95"/>
+            </Border.Background>
+            <Grid>
+                <!-- Brand: leaf + wordmark + subtitle (left) -->
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center">
+                    <Path Width="28" Height="28"
+                          Stroke="#5FA572" StrokeThickness="2"
+                          StrokeLineJoin="Round" Fill="Transparent" Stretch="Uniform"
+                          Data="M 50,5 C 20,15 5,40 10,75 C 40,75 75,55 80,15 C 70,12 60,10 50,5 Z M 18,68 C 35,55 55,40 65,20"
+                          VerticalAlignment="Center">
+                        <Path.Effect>
+                            <DropShadowEffect Color="#5FA572" BlurRadius="12" ShadowDepth="0" Opacity="0.6"/>
+                        </Path.Effect>
+                    </Path>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="StandNatura"
+                                   FontSize="20" FontWeight="SemiBold"
+                                   Foreground="#F5F0E8"
+                                   FontFamily="Trebuchet MS"
+                                   Typography.Capitals="AllSmallCaps"/>
+                        <TextBlock Text="Admin Dashboard"
+                                   FontSize="12" FontStyle="Italic"
+                                   Foreground="#9BB39E"
+                                   FontFamily="Trebuchet MS"
+                                   Margin="0,1,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Logout Button Top Right (unchanged) -->
+                <Button Content="🚪 Logout"
+                        Width="100" Height="35"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Background="#B7374A"
+                        Foreground="#FFFFFF"
+                        FontFamily="Trebuchet MS"
+                        FontSize="12" FontWeight="Bold"
+                        BorderBrush="#E05C6E" BorderThickness="2"
+                        Command="{Binding LogoutCommand}"/>
+            </Grid>
+        </Border>
+
+        <!-- Status strip: welcome line + 3 live stats -->
+        <Border Grid.Row="1"
+                Padding="40,16,40,16"
+                BorderBrush="#5FA572"
+                BorderThickness="0,0,0,1">
+            <Border.Background>
+                <SolidColorBrush Color="#0D2818" Opacity="0.4"/>
+            </Border.Background>
+            <StackPanel>
+                <TextBlock Text="{Binding WelcomeMessage}"
+                           Foreground="#D8E5DA"
                            FontFamily="Trebuchet MS"
-                           Margin="0,4,0,0"/>
+                           FontSize="14"
+                           Margin="0,0,0,12"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Pending Review" FontStyle="Italic"
+                                   Foreground="#9BB39E" FontFamily="Trebuchet MS" FontSize="12"/>
+                        <TextBlock Text="{Binding PendingCountDisplay}"
+                                   Foreground="#F5F0E8" FontFamily="Trebuchet MS"
+                                   FontSize="26" FontWeight="Bold" Margin="0,2,0,0"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Registered Users" FontStyle="Italic"
+                                   Foreground="#9BB39E" FontFamily="Trebuchet MS" FontSize="12"/>
+                        <TextBlock Text="{Binding TotalUsersDisplay}"
+                                   Foreground="#F5F0E8" FontFamily="Trebuchet MS"
+                                   FontSize="26" FontWeight="Bold" Margin="0,2,0,0"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Donations Raised" FontStyle="Italic"
+                                   Foreground="#9BB39E" FontFamily="Trebuchet MS" FontSize="12"/>
+                        <TextBlock Text="{Binding TotalDonationsDisplay}"
+                                   Foreground="#F5F0E8" FontFamily="Trebuchet MS"
+                                   FontSize="26" FontWeight="Bold" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Grid>
             </StackPanel>
+        </Border>
 
-            <!-- Logout Button Top Right -->
-            <Button Content="🚪 Logout"
-                    Width="100" Height="35"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Top"
-                    Background="#B7374A"
-                    Foreground="#FFFFFF"
-                    FontFamily="Trebuchet MS"
-                    FontSize="12" FontWeight="Bold"
-                    BorderBrush="#E05C6E" BorderThickness="2"
-                    Command="{Binding LogoutCommand}"/>
-        </Grid>
+        <!-- Menu: two labeled groups of cards -->
+        <StackPanel Grid.Row="2" HorizontalAlignment="Center" MaxWidth="650" Margin="40,28,40,0">
 
-        <!-- Buttons -->
-        <StackPanel Grid.Row="1"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Top"
-                    Width="320">
+            <!-- Content Moderation -->
+            <TextBlock Text="Content Moderation" FontStyle="Italic"
+                       Foreground="#9BB39E" FontFamily="Trebuchet MS" FontSize="13"
+                       Margin="8,0,0,6"/>
+            <WrapPanel HorizontalAlignment="Left">
+                <Button Style="{StaticResource CardButton}" Command="{Binding GoToVerifyPostsCommand}">
+                    <StackPanel>
+                        <TextBlock Text="✅" FontSize="30" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Verify Posts" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="#F5F0E8" FontFamily="Trebuchet MS"
+                                   HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource CardButton}" Command="{Binding GoToSightingFeedCommand}">
+                    <StackPanel>
+                        <TextBlock Text="🌍" FontSize="30" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Sighting Feed Overview" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="#F5F0E8" FontFamily="Trebuchet MS"
+                                   HorizontalAlignment="Center" TextAlignment="Center"
+                                   TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource CardButton}" Command="{Binding GoToHiddenSightingsCommand}">
+                    <StackPanel>
+                        <TextBlock Text="🔍" FontSize="30" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Hidden Sightings" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="#F5F0E8" FontFamily="Trebuchet MS"
+                                   HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
 
-            <Button Content="✅  Verify Posts"
-                    Width="320" Height="55"
-                    Margin="0,0,0,15"
-                    Background="#2D6A4F"
-                    Foreground="#D8F3DC"
-                    FontFamily="Trebuchet MS"
-                    FontSize="16" FontWeight="Bold"
-                    BorderBrush="#52B788" BorderThickness="2"
-                    Command="{Binding GoToVerifyPostsCommand}"/>
-
-            <Button Content="👤  Manage Users"
-                    Width="320" Height="55"
-                    Margin="0,0,0,15"
-                    Background="#2D6A4F"
-                    Foreground="#D8F3DC"
-                    FontFamily="Trebuchet MS"
-                    FontSize="16" FontWeight="Bold"
-                    BorderBrush="#52B788" BorderThickness="2"
-                    Command="{Binding GoToManageUsersCommand}"/>
-
-            <Button Content="🌍  Sighting Feed Overview"
-                    Width="320" Height="55"
-                    Margin="0,0,0,15"
-                    Background="#2D6A4F"
-                    Foreground="#D8F3DC"
-                    FontFamily="Trebuchet MS"
-                    FontSize="16" FontWeight="Bold"
-                    BorderBrush="#52B788" BorderThickness="2"
-                    Command="{Binding GoToSightingFeedCommand}"/>
-
-            <Button Content="💰  Donations &amp; Funds"
-                    Width="320" Height="55"
-                    Margin="0,0,0,15"
-                    Background="#2D6A4F"
-                    Foreground="#D8F3DC"
-                    FontFamily="Trebuchet MS"
-                    FontSize="16" FontWeight="Bold"
-                    BorderBrush="#52B788" BorderThickness="2"
-                    Command="{Binding GoToDonationsFundsCommand}"/>
-
-            <Button Content="🔍  Hidden Sightings"
-                    Width="320" Height="55"
-                    Margin="0,0,0,15"
-                    Background="#2D6A4F"
-                    Foreground="#D8F3DC"
-                    FontFamily="Trebuchet MS"
-                    FontSize="16" FontWeight="Bold"
-                    BorderBrush="#52B788" BorderThickness="2"
-                    Command="{Binding GoToHiddenSightingsCommand}"/>
-
+            <!-- Accounts & Finance -->
+            <TextBlock Text="Accounts &amp; Finance" FontStyle="Italic"
+                       Foreground="#9BB39E" FontFamily="Trebuchet MS" FontSize="13"
+                       Margin="8,24,0,6"/>
+            <WrapPanel HorizontalAlignment="Left">
+                <Button Style="{StaticResource CardButton}" Command="{Binding GoToManageUsersCommand}">
+                    <StackPanel>
+                        <TextBlock Text="👤" FontSize="30" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Manage Users" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="#F5F0E8" FontFamily="Trebuchet MS"
+                                   HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource CardButton}" Command="{Binding GoToDonationsFundsCommand}">
+                    <StackPanel>
+                        <TextBlock Text="💰" FontSize="30" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Donations &amp; Funds" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="#F5F0E8" FontFamily="Trebuchet MS"
+                                   HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
         </StackPanel>
     </Grid>
 </UserControl>

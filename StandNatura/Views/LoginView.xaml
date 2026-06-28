@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:svgc="clr-namespace:SharpVectors.Converters;assembly=SharpVectors.Converters.Wpf"
              mc:Ignorable="d">
 
     <!-- ============================================================
@@ -212,11 +213,16 @@
                         </Border>
 
                         <!-- Sign In button -->
+                        <!-- Custom template so the green Background shows in EVERY state
+                             (resting/disabled/hover/pressed). The default WPF button
+                             template paints its own disabled chrome (white/gray) and
+                             ignores Background, which is why it looked white when the
+                             fields were empty (LoginCommand disabled). -->
                         <Button Content="Sign In"
                                 Margin="0,30,0,0"
                                 Height="44"
-                                Background="#5FA572"
-                                Foreground="#0D2818"
+                                Background="#40916C"
+                                Foreground="#F5F0E8"
                                 FontFamily="Trebuchet MS"
                                 FontSize="14"
                                 FontWeight="Bold"
@@ -224,11 +230,28 @@
                                 Cursor="Hand"
                                 Command="{Binding LoginCommand}"
                                 Click="LoginButton_Click">
-                            <Button.Resources>
-                                <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="4"/>
-                                </Style>
-                            </Button.Resources>
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd"
+                                            Background="{TemplateBinding Background}"
+                                            CornerRadius="4">
+                                        <ContentPresenter HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#52B788"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#2D6A4F"/>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <!-- Still green, just dimmed to hint "not ready yet" -->
+                                            <Setter TargetName="bd" Property="Opacity" Value="0.55"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
                         </Button>
 
                         <!-- Divider with "or" -->
@@ -255,6 +278,35 @@
                                     Opacity="0.3"
                                     VerticalAlignment="Center"/>
                         </Grid>
+
+                        <!-- Sign in with Google (additional option, dark variant) -->
+                        <Button Margin="0,16,0,0"
+                                Height="44"
+                                Background="#0D2818"
+                                Foreground="#F5F0E8"
+                                FontFamily="Trebuchet MS"
+                                FontSize="14"
+                                FontWeight="Bold"
+                                BorderBrush="#4D5FA572"
+                                BorderThickness="1"
+                                Cursor="Hand"
+                                Command="{Binding GoogleSignInCommand}">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="4"/>
+                                </Style>
+                            </Button.Resources>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <!-- Official Google "G" SVG (carries its own dark badge),
+                                     rendered natively via SharpVectors -->
+                                <svgc:SvgViewbox Source="/Assets/google-g-logo.svg"
+                                                 Width="24" Height="24"
+                                                 Margin="0,0,10,0"
+                                                 VerticalAlignment="Center"/>
+                                <TextBlock Text="Sign in with Google"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
                         <!-- Register link -->
                         <StackPanel Orientation="Horizontal"
