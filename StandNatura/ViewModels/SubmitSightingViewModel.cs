@@ -182,12 +182,8 @@ namespace StandNatura.ViewModels
                     // never blocked — but their bumped DatePosted still counts toward the total.
                     if (!_editingSightingId.HasValue)
                     {
-                        string countQuery = @"
-                            SELECT COUNT(*) FROM Sighting
-                            WHERE UserId = @userId
-                              AND DatePosted >= CAST(GETDATE() AS DATE)
-                              AND DatePosted <  DATEADD(DAY, 1, CAST(GETDATE() AS DATE))";
-                        using (SqlCommand countCmd = new SqlCommand(countQuery, connection))
+                        using (SqlCommand countCmd = new SqlCommand(
+                            "SELECT dbo.fn_GetUserSubmissionCountToday(@userId)", connection))
                         {
                             countCmd.Parameters.AddWithValue("@userId", _currentUser.Id);
                             int todayCount = (int)countCmd.ExecuteScalar();

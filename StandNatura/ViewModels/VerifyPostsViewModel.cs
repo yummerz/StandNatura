@@ -125,7 +125,39 @@ namespace StandNatura.ViewModels
             if (dialogResult != true)
                 return;
 
-            UpdateStatus(SelectedSighting.SightingId, "Denied", reasonDialog.Reason);
+            DenySightingViaProcedure(SelectedSighting.SightingId, reasonDialog.Reason);
+        }
+
+        // ── DENY VIA STORED PROCEDURE ─────────────────────────
+        // Same effect as the old inline "UPDATE Sighting SET Status='Denied',
+        // DenialReason=... " — now wrapped in dbo.usp_DenySighting.
+        private void DenySightingViaProcedure(int sightingId, string? denialReason)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    using (SqlCommand command = new SqlCommand("dbo.usp_DenySighting", connection))
+                    {
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@SightingId", sightingId);
+                        command.Parameters.AddWithValue("@DenialReason",
+                            string.IsNullOrWhiteSpace(denialReason) ? DBNull.Value : (object)denialReason);
+                        connection.Open();
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                MessageBox.Show("Sighting has been Denied.", "Success",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+
+                LoadPendingSightings();
+                SelectedSighting = null;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to update sighting: " + ex.Message);
+            }
         }
 
         // ── UPDATE STATUS ─────────────────────────────────────
